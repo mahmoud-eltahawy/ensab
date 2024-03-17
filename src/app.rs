@@ -1,7 +1,6 @@
 use crate::error_template::{AppError, ErrorTemplate};
 use leptos::{
     ev::{Event, SubmitEvent},
-    logging::log,
     *,
 };
 use leptos_meta::*;
@@ -46,13 +45,13 @@ fn HomePage() -> impl IntoView {
     let name = RwSignal::new(Person::default());
     let is_visualed = RwSignal::new(false);
 
-    Effect::new(move |_| log!("{:#?}", name.get()));
-
     view! {
         <Show
             when=is_visualed
             fallback=move || view! {<NameForm is_visualed=is_visualed name=name/>}>
-            <Visuals name=name.into()/>
+            <div class="grid grid-cols-1 gap-5 justify-content-center justify-items-center">
+                <Visuals name=name/>
+            </div>
         </Show>
     }
 }
@@ -85,24 +84,60 @@ fn NameForm(name: RwSignal<Person>, is_visualed: RwSignal<bool>) -> impl IntoVie
 }
 
 #[component]
-fn Visuals(name: MaybeSignal<Person>) -> impl IntoView {
-    let key = |k: &Person| k.key();
-    let sons = {
-        let name = name.clone();
-        move || name.get().sons
+fn Visuals(name: RwSignal<Person>) -> impl IntoView {
+    #[component]
+    fn Sons(name: RwSignal<Person>) -> impl IntoView {
+        let sons = {
+            let name = name.clone();
+            move || name.get().sons
+        };
+
+        let key = |k: &RwSignal<Person>| k.get().key();
+
+        let when = {
+            let sons = sons.clone();
+            move || sons().len() > 0
+        };
+        view! {
+            <>
+            <Show when=when>
+                <div class="flex flex-row gap-5 border-2 p-4 m-4 border-black">
+                    <For
+                        each=sons.clone()
+                        key=key
+                        let:child
+                    >
+                        <Visuals name=child/>
+                    </For>
+                </div>
+            </Show>
+            </>
+        }
+    }
+
+    let handle_person = move |person: RwSignal<Person>| {
+        logging::log!(
+            "generation : {}\nsibling order {}",
+            person.get().generation,
+            person.get().sibling_order
+        );
+
+        person.update(|x| {
+            x.sons.push(RwSignal::new(Person {
+                sibling_order: x.sons.len() as i32 + 1,
+                generation: x.generation + 1,
+                ..Default::default()
+            }))
+        });
     };
+
     view! {
-        <div class="grid grid-cols-1 gap-5 justify-content-center justify-items-center">
-            <button class="p-10 m-5 border-4 size-50 rounded-lg">{name.get().name}</button>
-            <div>
-                <For
-                    each=sons
-                    key=key
-                    let:child
-                >
-                    <Visuals name=child.into()/>
-                </For>
-            </div>
+        <div class="grid grid-cols-1">
+            <button
+                on:click=move |_| {handle_person(name)}
+                class="p-10 m-5 border-4 size-50 rounded-lg"
+            >{name.get().name}</button>
+            <Sons name=name/>
         </div>
     }
 }
@@ -110,8 +145,9 @@ fn Visuals(name: MaybeSignal<Person>) -> impl IntoView {
 #[derive(Debug, Clone)]
 struct Person {
     name: String,
-    generation: usize,
-    sons: Vec<Person>,
+    generation: i32,
+    sibling_order: i32,
+    sons: Vec<RwSignal<Person>>,
 }
 
 impl Default for Person {
@@ -119,13 +155,14 @@ impl Default for Person {
         Person {
             name: String::new(),
             generation: 1,
+            sibling_order: 0,
             sons: vec![],
         }
     }
 }
 
 impl Person {
-    fn with_sons(&mut self, names: &mut Vec<String>, generation: usize) {
+    fn with_sons(&mut self, names: &mut Vec<String>, generation: i32) {
         let Some(name) = names.pop() else {
             return;
         };
@@ -135,10 +172,10 @@ impl Person {
             ..Default::default()
         };
         son.with_sons(names, generation + 1);
-        self.sons = vec![son];
+        self.sons = vec![RwSignal::new(son)];
     }
 
     fn key(&self) -> String {
-        self.name.clone() + &self.generation.to_string()
+        self.name.clone() + &self.generation.to_string() + &self.sibling_order.to_string()
     }
 }
