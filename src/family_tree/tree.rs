@@ -10,15 +10,11 @@ pub fn Tree(name: RwSignal<FamilyMember>) -> impl IntoView {
     let take_action = RwSignal::new(false);
 
     view! {
-        <div class="grid grid-cols-1">
-            <Show
-                when=take_action
-            >
-                <MemberAction name=name take_action=take_action/>
-            </Show>
+        <div class="grid grid-cols-1 m-10">
+            <MemberAction name=name take_action=take_action/>
             <button
                 on:click=move |_| {take_action.update(|x| *x = !*x)}
-                class="p-10 m-5 border-4 size-50 rounded-lg"
+                class="pt-3 pb-1 mx-5 border-t-4 size-50 rounded-full"
             >{name.get().name}</button>
             <Sons name=name/>
         </div>
@@ -40,7 +36,7 @@ fn Sons(name: RwSignal<FamilyMember>) -> impl IntoView {
     };
     view! {
         <Show when=when>
-            <div class="flex flex-row gap-5 border-2 p-4 m-4 border-black">
+            <div class="flex flex-row gap-5 border-t-2 rounded-t-lg px-4 mx-4 border-black">
                 <For
                     each=sons.clone()
                     key=key

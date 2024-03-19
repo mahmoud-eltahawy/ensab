@@ -16,7 +16,7 @@ pub fn FamilyTree() -> impl IntoView {
         <Show
             when=is_visualed
             fallback=move || view! {<NameForm is_visualed=is_visualed name=name/>}>
-            <div class="grid grid-cols-1 gap-5 justify-content-center justify-items-center">
+            <div class="grid grid-cols-1 gap-x-5 justify-content-center justify-items-center">
                 <Tree name=name/>
             </div>
         </Show>

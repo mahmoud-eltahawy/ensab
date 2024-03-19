@@ -38,4 +38,14 @@ impl FamilyMember {
     pub fn key(&self) -> String {
         self.name.clone() + &self.generation.to_string() + &self.sibling_order.to_string()
     }
+
+    pub fn get_son(&mut self, name: String, is_male: bool) {
+        self.sons.push(RwSignal::new(FamilyMember {
+            name,
+            is_male,
+            generation: self.generation + 1,
+            sibling_order: self.sons.len() as i32 + 1,
+            sons: vec![],
+        }));
+    }
 }
