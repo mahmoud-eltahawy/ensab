@@ -7,7 +7,7 @@ pub fn MemberAction(name: RwSignal<FamilyMember>, take_action: RwSignal<bool>) -
     let add_person = RwSignal::new(false);
 
     view! {
-        <>
+    <>
         <Show
             when=take_action
         >
@@ -34,8 +34,12 @@ pub fn MemberAction(name: RwSignal<FamilyMember>, take_action: RwSignal<bool>) -
                 >"الغاء"</button>
             </div>
         </Show>
-        <AddSon member=name add_person=add_person take_action=take_action/>
-        <>
+        <AddSon
+            member=name
+            add_person=add_person
+            take_action=take_action
+        />
+    <>
     }
 }
 
@@ -45,22 +49,6 @@ fn AddSon(
     add_person: RwSignal<bool>,
     take_action: RwSignal<bool>,
 ) -> impl IntoView {
-    // let handle_person = move |person: RwSignal<FamilyMember>| {
-    //     logging::log!(
-    //         "generation : {}\nsibling order {}",
-    //         person.get().generation + 1,
-    //         person.get().sons.len() + 1
-    //     );
-
-    //     person.update(|x| {
-    //         x.sons.push(RwSignal::new(FamilyMember {
-    //             sibling_order: x.sons.len() as i32 + 1,
-    //             generation: x.generation + 1,
-    //             ..Default::default()
-    //         }))
-    //     });
-    // };
-
     let name: NodeRef<html::Input> = create_node_ref();
     let gender: NodeRef<html::Select> = create_node_ref();
 
@@ -68,13 +56,9 @@ fn AddSon(
         ev.prevent_default();
 
         let name = name().expect("<input> should be mounted").value();
-        let gender: bool = gender()
-            .expect("<input> should be mounted")
-            .value()
-            .parse()
-            .unwrap();
+        let is_male: bool = gender().unwrap().value().parse().unwrap_or(true);
 
-        member.update(|x| x.get_son(name, gender));
+        member.update(|x| x.add_son(name, is_male));
         add_person.set(false);
         logging::log!("father {:#?}", member.get());
     };
@@ -85,23 +69,38 @@ fn AddSon(
         >
             <form
                 on:submit=on_submit
-                class="grid justify-content-center justify-items-center gap-5 p-10 m-5 border-4 size-50 rounded-lg z-20 absolute place-self-center bg-white"
+                class="grid grid-cols-4 justify-content-center justify-items-center gap-5 p-10 m-5 border-4 size-50 rounded-lg z-20 absolute place-self-center bg-white"
             >
                 <input
+                    class="col-span-4 text-center border-2 m-5 p-5 text-3xl"
                     node_ref=name
                     placeholder="الاسم"
+                    required
                 />
                 <select
+                    class="col-span-4 text-center border-2 m-5 p-5 text-3xl"
                     node_ref=gender
                 >
-                    <option value="true">"ذكر"</option>
-                    <option value="false">"انثي"</option>
+                    <option
+                        value="true"
+                        class="text-center border-2 m-5 p-5 text-3xl"
+                    >"ذكر"</option>
+                    <option
+                        value="false"
+                        class="text-center border-2 m-5 p-5 text-3xl"
+                    >"انثي"</option>
                 </select>
-                <button type="submit">"تاكيد"</button>
-                <button on:click=move |_| {
-                    add_person.set(false);
-                    take_action.set(true);
-                }>"الغاء"</button>
+                <button
+                    class="border-2 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+                    on:click=move |_| {
+                        add_person.set(false);
+                        take_action.set(true);
+                    }
+                >"الغاء"</button>
+                <button
+                    class="border-2 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+                    type="submit"
+                >"تاكيد"</button>
             </form>
         </Show>
     }

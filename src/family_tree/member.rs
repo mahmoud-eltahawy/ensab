@@ -22,16 +22,16 @@ impl Default for FamilyMember {
 }
 
 impl FamilyMember {
-    pub fn with_sons(&mut self, names: &mut Vec<String>, generation: i32) {
+    pub fn with_sons(&mut self, names: &mut Vec<String>) {
         let Some(name) = names.pop() else {
             return;
         };
         let mut son = FamilyMember {
             name,
-            generation,
+            generation: self.generation + 1,
             ..Default::default()
         };
-        son.with_sons(names, generation + 1);
+        son.with_sons(names);
         self.sons = vec![RwSignal::new(son)];
     }
 
@@ -39,13 +39,26 @@ impl FamilyMember {
         self.name.clone() + &self.generation.to_string() + &self.sibling_order.to_string()
     }
 
-    pub fn get_son(&mut self, name: String, is_male: bool) {
+    pub fn add_son(&mut self, name: String, is_male: bool) {
+        let person = Self::create_from_name(name, self.generation + 1);
         self.sons.push(RwSignal::new(FamilyMember {
-            name,
             is_male,
-            generation: self.generation + 1,
             sibling_order: self.sons.len() as i32 + 1,
-            sons: vec![],
+            ..person
         }));
+    }
+
+    pub fn create_from_name(name: String, generation: i32) -> Self {
+        let mut names = name
+            .split_whitespace()
+            .map(|x| x.to_string())
+            .collect::<Vec<_>>();
+        let mut person = FamilyMember {
+            name: names.pop().unwrap(),
+            generation,
+            ..Default::default()
+        };
+        person.with_sons(&mut names);
+        person
     }
 }
