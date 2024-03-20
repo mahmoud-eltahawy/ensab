@@ -1,4 +1,7 @@
-use leptos::*;
+use leptos::{
+    ev::{Event, SubmitEvent},
+    *,
+};
 
 use crate::family_tree::member::FamilyMember;
 
@@ -52,14 +55,28 @@ fn AddSon(
     let name: NodeRef<html::Input> = create_node_ref();
     let gender: NodeRef<html::Select> = create_node_ref();
 
-    let on_submit = move |ev: leptos::ev::SubmitEvent| {
+    let is_only = RwSignal::new(true);
+
+    let on_submit = move |ev: SubmitEvent| {
         ev.prevent_default();
 
         let name = name().expect("<input> should be mounted").value();
+        let names = name.split(',').map(|x| x.to_string()).collect::<Vec<_>>();
         let is_male: bool = gender().unwrap().value().parse().unwrap_or(true);
 
-        member.update(|x| x.add_son(name, is_male));
+        for name in names {
+            member.update(|x| x.add_son(name, is_male));
+        }
         add_person.set(false);
+    };
+
+    let on_input = move |ev: Event| {
+        let s = event_target_value(&ev);
+        if s.contains(",") {
+            is_only.set(false);
+        } else {
+            is_only.set(true);
+        }
     };
 
     view! {
@@ -73,6 +90,7 @@ fn AddSon(
                 <input
                     class="col-span-4 text-center border-2 m-5 p-5 text-3xl"
                     node_ref=name
+                    on:input=on_input
                     placeholder="الاسم"
                     required
                 />
@@ -83,11 +101,11 @@ fn AddSon(
                     <option
                         value="true"
                         class="text-center border-2 m-5 p-5 text-3xl"
-                    >"ذكر"</option>
+                    >{move || if is_only.get() {"ذكر"} else {"ذكور"}}</option>
                     <option
                         value="false"
                         class="text-center border-2 m-5 p-5 text-3xl"
-                    >"انثي"</option>
+                    >{move || if is_only.get() {"انثي"} else {"اناث"}}</option>
                 </select>
                 <button
                     class="border-2 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"

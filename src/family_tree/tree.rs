@@ -40,7 +40,7 @@ fn Sons(name: RwSignal<FamilyMember>) -> impl IntoView {
     };
     view! {
         <Show when=when>
-            <div class="flex flex-row flex-nowrap gap-5 flex-auto justify-center border-t-2 rounded-t-lg px-4 mx-4 border-black">
+            <div class="overflow-auto flex flex-row flex-nowrap gap-5 flex-auto justify-center border-t-2 rounded-t-lg px-4 mx-4 border-black">
                 <For
                     each=sons.clone()
                     key=key
