@@ -9,16 +9,18 @@ use member_action::MemberAction;
 pub fn Tree(name: RwSignal<FamilyMember>) -> impl IntoView {
     let take_action = RwSignal::new(false);
 
+    Effect::new(move |_| logging::log!("{}", take_action.get()));
+
     view! {
         <>
-        <MemberAction name=name take_action=take_action/>
         <div class="flex flex-col m-10 flex-nowrap">
             <button
                 on:click=move |_| {take_action.update(|x| *x = !*x)}
                 class="pt-3 pb-1 mx-5 size-50 rounded-full"
-            >{name.get().name}</button>
-            <Sons name=name/>
+            >{move || name.get().name}</button>
+            <Sons name=name.clone()/>
         </div>
+        <MemberAction name=name take_action=take_action/>
         </>
     }
 }
@@ -27,7 +29,7 @@ pub fn Tree(name: RwSignal<FamilyMember>) -> impl IntoView {
 fn Sons(name: RwSignal<FamilyMember>) -> impl IntoView {
     let sons = {
         let name = name.clone();
-        move || name.get().sons
+        move || name.get().sons.get()
     };
 
     let key = |k: &RwSignal<FamilyMember>| k.get().key();

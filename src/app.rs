@@ -1,9 +1,10 @@
-use crate::error_template::{AppError, ErrorTemplate};
+use crate::{
+    error_template::{AppError, ErrorTemplate},
+    family_tree::{FamilyTree, NameForm},
+};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-
-use crate::family_tree::FamilyTree;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -30,7 +31,8 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="" view=Home/>
-                    <Route path="ftree" view=FamilyTree/>
+                    <Route path="ftree" view=NameForm/>
+                    <Route path="ftree/:name" view=FamilyTree/>
                 </Routes>
             </main>
         </Router>

@@ -14,7 +14,7 @@ pub fn MemberAction(name: RwSignal<FamilyMember>, take_action: RwSignal<bool>) -
             <div
                 class="grid justify-content-center justify-items-center gap-5 p-10 m-5 border-4 size-50 rounded-lg z-10 absolute place-self-center bg-white"
             >
-                <h2>{name.get().name}</h2>
+                <h2>{move || name.get().name}</h2>
                 <button
                     on:click=move |_| {
                         add_person.set(true);
@@ -60,7 +60,6 @@ fn AddSon(
 
         member.update(|x| x.add_son(name, is_male));
         add_person.set(false);
-        logging::log!("father {:#?}", member.get());
     };
 
     view! {
