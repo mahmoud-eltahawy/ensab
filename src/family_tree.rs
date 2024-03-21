@@ -12,9 +12,7 @@ pub fn FamilyTree() -> impl IntoView {
     let name = move || params.with(|params| params.get("name").cloned()).unwrap();
     let member = RwSignal::new(FamilyMember::new(RwSignal::new(name())));
 
-    view! {
-        <Tree name=member/>
-    }
+    view! { <Tree member=member/> }
 }
 
 #[component]
@@ -31,7 +29,7 @@ pub fn NameForm() -> impl IntoView {
     let on_input = move |ev: Event| {
         let s = event_target_value(&ev);
         let s = s.trim_start();
-        if s.contains(" ") {
+        if s.contains(' ') {
             submit();
         }
     };
@@ -42,18 +40,12 @@ pub fn NameForm() -> impl IntoView {
                 ev.prevent_default();
                 submit()
             }
+
             class="grid gap-5 grid-cols-1 m-10 border-2 rounded-lg p-10 text-3xl"
         >
             <h2 class="text-center">"اسم رأس العائلة"</h2>
-            <input
-                on:input=on_input
-                node_ref=name
-                class="border-2 p-5 text-center"
-                required
-            />
-            <button
-                class="border-2 p-5 rounded-lg hover:text-5xl"
-            >"ابدء"</button>
+            <input on:input=on_input node_ref=name class="border-2 p-5 text-center" required/>
+            <button class="border-2 p-5 rounded-lg hover:text-5xl">"ابدء"</button>
         </form>
     }
 }

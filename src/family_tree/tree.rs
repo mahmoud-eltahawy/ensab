@@ -6,47 +6,37 @@ mod member_action;
 use member_action::MemberAction;
 
 #[component]
-pub fn Tree(name: RwSignal<FamilyMember>) -> impl IntoView {
+pub fn Tree(member: RwSignal<FamilyMember>) -> impl IntoView {
     let take_action = RwSignal::new(false);
-
-    Effect::new(move |_| logging::log!("{}", take_action.get()));
 
     view! {
         <>
-        <div class="flex flex-col m-10 flex-nowrap">
-            <button
-                on:click=move |_| {take_action.update(|x| *x = !*x)}
-                class="pt-3 pb-1 mx-5 size-50 rounded-full"
-            >{move || name.get().name}</button>
-            <Sons name=name.clone()/>
-        </div>
-        <MemberAction name=name take_action=take_action/>
+            <div class="flex flex-col m-10 flex-nowrap">
+                <button
+                    on:click=move |_| { take_action.update(|x| *x = !*x) }
+                    class="pt-3 pb-1 mx-5 size-50 rounded-full"
+                >
+                    {move || member.get().name}
+                </button>
+                <Sons name=member/>
+            </div>
+            <MemberAction member=member take_action=take_action/>
         </>
     }
 }
 
 #[component]
 fn Sons(name: RwSignal<FamilyMember>) -> impl IntoView {
-    let sons = {
-        let name = name.clone();
-        move || name.get().sons.get()
-    };
+    let sons = move || name.get().sons.get();
 
     let key = |k: &RwSignal<FamilyMember>| k.get().key();
 
-    let when = {
-        let sons = sons.clone();
-        move || sons().len() > 0
-    };
+    let when = move || !sons().is_empty();
     view! {
         <Show when=when>
-            <div class="overflow-auto flex flex-row flex-nowrap gap-5 flex-auto justify-center border-t-2 rounded-t-lg px-4 mx-4 border-black">
-                <For
-                    each=sons.clone()
-                    key=key
-                    let:member
-                >
-                    <Tree name=member/>
+            <div class="flex flex-row gap-4 overflow-auto border-t-2 rounded-t-lg px-4 mx-4 border-black">
+                <For each=sons key=key let:member>
+                    <Tree member=member/>
                 </For>
             </div>
         </Show>
