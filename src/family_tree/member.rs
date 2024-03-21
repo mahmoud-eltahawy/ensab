@@ -1,4 +1,4 @@
-use leptos::{RwSignal, SignalGet, SignalUpdateUntracked};
+use leptos::{logging, RwSignal, SignalGet, SignalUpdateUntracked};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FamilyMember {
@@ -48,11 +48,15 @@ impl FamilyMember {
     pub fn add_son(&self, name: String, is_male: bool) {
         let person = Self::create_from_name(name, self.generation + 1);
         self.sons.update_untracked(|sons| {
-            sons.push(RwSignal::new(FamilyMember {
-                is_male,
-                sibling_order: sons.len() as i32 + 1,
-                ..person
-            }))
+            if sons.iter().any(|x| x.get().name.get() == person.name.get()) {
+                logging::log!("{} already exists", person.name.get());
+            } else {
+                sons.push(RwSignal::new(FamilyMember {
+                    is_male,
+                    sibling_order: sons.len() as i32 + 1,
+                    ..person
+                }));
+            }
         });
     }
 
