@@ -1,20 +1,19 @@
 use leptos::{RwSignal, SignalGet, SignalGetUntracked, SignalUpdate};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy)]
 pub struct FamilyMember {
+    pub id: Uuid,
     pub name: RwSignal<String>,
     pub is_male: bool,
-    pub generation: i32,
-    pub sibling_order: i32,
     pub sons: RwSignal<Vec<FamilyMember>>,
 }
 
 impl Default for FamilyMember {
     fn default() -> Self {
         FamilyMember {
+            id: Uuid::new_v4(),
             name: RwSignal::new(String::new()),
-            generation: 1,
-            sibling_order: 1,
             is_male: true,
             sons: RwSignal::new(vec![]),
         }
@@ -34,42 +33,29 @@ impl FamilyMember {
         };
         let mut son = FamilyMember {
             name: RwSignal::new(name),
-            generation: self.generation + 1,
             ..Default::default()
         };
         son.with_sons(names);
         self.sons = RwSignal::new(vec![son]);
     }
 
-    pub fn key(&self) -> String {
-        self.name.get() + &self.generation.to_string() + &self.sibling_order.to_string()
-    }
-
     pub fn add_son(&self, name: String, is_male: bool) {
-        let person = Self::create_from_name(name, self.generation + 1);
+        let person = Self::create_from_name(name);
         self.sons.update(|sons| {
             if let Some(son) = sons.iter().find(|x| x.name.get() == person.name.get()) {
                 let persons = person.sons.get_untracked().into_iter().collect::<Vec<_>>();
                 son.sons.update(|sons| {
                     for person in persons {
-                        sons.push(FamilyMember {
-                            is_male,
-                            sibling_order: sons.len() as i32 + 1,
-                            ..person
-                        })
+                        sons.push(FamilyMember { is_male, ..person })
                     }
                 });
             } else {
-                sons.push(FamilyMember {
-                    is_male,
-                    sibling_order: sons.len() as i32 + 1,
-                    ..person
-                });
+                sons.push(FamilyMember { is_male, ..person });
             }
         });
     }
 
-    pub fn create_from_name(name: String, generation: i32) -> Self {
+    pub fn create_from_name(name: String) -> Self {
         let mut names = name
             .split_whitespace()
             .map(|x| x.to_string())
@@ -79,7 +65,6 @@ impl FamilyMember {
         };
         let mut person = FamilyMember {
             name: RwSignal::new(name),
-            generation,
             ..Default::default()
         };
         person.with_sons(&mut names);

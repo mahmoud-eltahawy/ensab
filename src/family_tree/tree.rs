@@ -29,7 +29,7 @@ pub fn Tree(member: FamilyMember) -> impl IntoView {
 fn Sons(name: FamilyMember) -> impl IntoView {
     let sons = move || name.sons.get();
 
-    let key = |k: &FamilyMember| k.key();
+    let key = |k: &FamilyMember| k.id;
 
     let when = move || !sons().is_empty();
     view! {
