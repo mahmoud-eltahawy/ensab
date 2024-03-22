@@ -6,7 +6,7 @@ mod member_action;
 use member_action::MemberAction;
 
 #[component]
-pub fn Tree(member: RwSignal<FamilyMember>) -> impl IntoView {
+pub fn Tree(member: FamilyMember) -> impl IntoView {
     let take_action = RwSignal::new(false);
 
     view! {
@@ -16,7 +16,7 @@ pub fn Tree(member: RwSignal<FamilyMember>) -> impl IntoView {
                     on:click=move |_| { take_action.update(|x| *x = !*x) }
                     class="pt-3 pb-1 mx-5 size-50 rounded-full"
                 >
-                    {move || member.get().name}
+                    {move || member.name.get()}
                 </button>
                 <Sons name=member/>
             </div>
@@ -26,10 +26,10 @@ pub fn Tree(member: RwSignal<FamilyMember>) -> impl IntoView {
 }
 
 #[component]
-fn Sons(name: RwSignal<FamilyMember>) -> impl IntoView {
-    let sons = move || name.get().sons.get();
+fn Sons(name: FamilyMember) -> impl IntoView {
+    let sons = move || name.sons.get();
 
-    let key = |k: &RwSignal<FamilyMember>| k.get().key();
+    let key = |k: &FamilyMember| k.key();
 
     let when = move || !sons().is_empty();
     view! {

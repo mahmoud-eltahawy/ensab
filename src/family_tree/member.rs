@@ -1,4 +1,4 @@
-use leptos::{logging, RwSignal, SignalGet, SignalUpdateUntracked};
+use leptos::{RwSignal, SignalGet, SignalGetUntracked, SignalUpdate};
 
 #[derive(Debug, Clone, Copy)]
 pub struct FamilyMember {
@@ -6,7 +6,7 @@ pub struct FamilyMember {
     pub is_male: bool,
     pub generation: i32,
     pub sibling_order: i32,
-    pub sons: RwSignal<Vec<RwSignal<FamilyMember>>>,
+    pub sons: RwSignal<Vec<FamilyMember>>,
 }
 
 impl Default for FamilyMember {
@@ -38,7 +38,7 @@ impl FamilyMember {
             ..Default::default()
         };
         son.with_sons(names);
-        self.sons = RwSignal::new(vec![RwSignal::new(son)]);
+        self.sons = RwSignal::new(vec![son]);
     }
 
     pub fn key(&self) -> String {
@@ -47,15 +47,24 @@ impl FamilyMember {
 
     pub fn add_son(&self, name: String, is_male: bool) {
         let person = Self::create_from_name(name, self.generation + 1);
-        self.sons.update_untracked(|sons| {
-            if sons.iter().any(|x| x.get().name.get() == person.name.get()) {
-                logging::log!("{} already exists", person.name.get());
+        self.sons.update(|sons| {
+            if let Some(son) = sons.iter().find(|x| x.name.get() == person.name.get()) {
+                let persons = person.sons.get_untracked().into_iter().collect::<Vec<_>>();
+                son.sons.update(|sons| {
+                    for person in persons {
+                        sons.push(FamilyMember {
+                            is_male,
+                            sibling_order: sons.len() as i32 + 1,
+                            ..person
+                        })
+                    }
+                });
             } else {
-                sons.push(RwSignal::new(FamilyMember {
+                sons.push(FamilyMember {
                     is_male,
                     sibling_order: sons.len() as i32 + 1,
                     ..person
-                }));
+                });
             }
         });
     }

@@ -10,7 +10,7 @@ use tree::Tree;
 pub fn FamilyTree() -> impl IntoView {
     let params = use_params_map();
     let name = move || params.with(|params| params.get("name").cloned()).unwrap();
-    let member = RwSignal::new(FamilyMember::new(RwSignal::new(name())));
+    let member = FamilyMember::new(RwSignal::new(name()));
 
     view! { <Tree member=member/> }
 }

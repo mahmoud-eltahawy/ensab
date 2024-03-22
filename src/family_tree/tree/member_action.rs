@@ -3,7 +3,7 @@ use leptos::{ev::Event, *};
 use crate::family_tree::member::FamilyMember;
 
 #[component]
-pub fn MemberAction(member: RwSignal<FamilyMember>, take_action: RwSignal<bool>) -> impl IntoView {
+pub fn MemberAction(member: FamilyMember, take_action: RwSignal<bool>) -> impl IntoView {
     let actions = ActionSignals::default();
 
     view! {
@@ -11,7 +11,7 @@ pub fn MemberAction(member: RwSignal<FamilyMember>, take_action: RwSignal<bool>)
             <Buttons
                 take_action=take_action
                 action_signals=actions
-                member_name=move || member.get().name.get()
+                member_name=move || member.name.get()
             />
             <Actions member=member take_action=take_action actions=actions/>
         </>
@@ -21,7 +21,7 @@ pub fn MemberAction(member: RwSignal<FamilyMember>, take_action: RwSignal<bool>)
 #[component]
 fn Actions(
     take_action: RwSignal<bool>,
-    member: RwSignal<FamilyMember>,
+    member: FamilyMember,
     actions: ActionSignals,
 ) -> impl IntoView {
     let ActionSignals { add_person } = actions;
@@ -126,11 +126,7 @@ where
 }
 
 #[component]
-fn AddMember<F>(
-    member: RwSignal<FamilyMember>,
-    add_person: RwSignal<bool>,
-    cancel: F,
-) -> impl IntoView
+fn AddMember<F>(member: FamilyMember, add_person: RwSignal<bool>, cancel: F) -> impl IntoView
 where
     F: Fn() + Clone + Copy + 'static,
 {
@@ -145,7 +141,7 @@ where
         let is_male: bool = gender().unwrap().value().parse().unwrap_or(true);
 
         for name in names {
-            member.update(|x| x.add_son(name, is_male));
+            member.add_son(name, is_male);
         }
         add_person.set(false);
     };
