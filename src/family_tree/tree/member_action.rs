@@ -1,4 +1,5 @@
 use leptos::{ev::Event, *};
+use uuid::Uuid;
 
 use crate::family_tree::member::FamilyMember;
 
@@ -24,14 +25,22 @@ fn Actions(
     member: FamilyMember,
     actions: ActionSignals,
 ) -> impl IntoView {
-    let ActionSignals { add_person } = actions;
+    let ActionSignals {
+        add_person,
+        remove_person,
+    } = actions;
     let cancel_add_son = move || {
         add_person.set(false);
+        take_action.set(true);
+    };
+    let cancel_remove_son = move || {
+        remove_person.set(false);
         take_action.set(true);
     };
     view! {
         <>
             <AddMember member=member add_person=add_person cancel=cancel_add_son/>
+            <RemoveSon member=member remove_person=remove_person cancel=cancel_remove_son/>
         </>
     }
 }
@@ -58,13 +67,13 @@ where
             >
                 {children()}
                 <button
-                    class="border-2 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+                    class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
                     type="submit"
                 >
                     "تاكيد"
                 </button>
                 <button
-                    class="border-2 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+                    class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
                     on:click=move |_| { cancel() }
                 >
 
@@ -78,12 +87,14 @@ where
 #[derive(Clone, Copy)]
 struct ActionSignals {
     add_person: RwSignal<bool>,
+    remove_person: RwSignal<bool>,
 }
 
 impl Default for ActionSignals {
     fn default() -> Self {
         Self {
             add_person: RwSignal::new(false),
+            remove_person: RwSignal::new(false),
         }
     }
 }
@@ -97,7 +108,10 @@ fn Buttons<F>(
 where
     F: Fn() -> String + Clone + Copy + 'static,
 {
-    let ActionSignals { add_person } = action_signals;
+    let ActionSignals {
+        add_person,
+        remove_person,
+    } = action_signals;
     view! {
         <Show when=take_action>
             <div class="grid justify-content-center justify-items-center gap-5 p-10 mx-32 my-10 border-4 size-50 rounded-lg z-10 absolute inset-0 bg-white">
@@ -107,12 +121,17 @@ where
                         add_person.set(true);
                         take_action.set(false);
                     }
-
                     class="p-5 m-2 border-2 rounded-lg"
                 >
                     "اضافة ابن"
                 </button>
-                <button class="p-5 border-2 rounded-lg">"حذف الابن"</button>
+                <button
+                    on:click=move |_| {
+                        remove_person.set(true);
+                        take_action.set(false);
+                    }
+                    class="p-5 border-2 rounded-lg"
+                >"حذف الابن"</button>
                 <button class="p-5 border-2 rounded-lg">"تغيير الاسم"</button>
                 <button
                     class="p-5 border-2 rounded-lg"
@@ -172,6 +191,85 @@ where
                     {move || if is_only.get() { "انثي" } else { "اناث" }}
                 </option>
             </select>
+        </Action>
+    }
+}
+
+#[component]
+fn RemoveSon<F>(member: FamilyMember, remove_person: RwSignal<bool>, cancel: F) -> impl IntoView
+where
+    F: Fn() + Clone + Copy + 'static,
+{
+    let deleted = RwSignal::<Vec<FamilyMember>>::new(vec![]);
+    let on_submit = move || {
+        let deleted_ids = deleted
+            .get_untracked()
+            .into_iter()
+            .map(|x| x.id)
+            .collect::<Vec<_>>();
+        member.sons.update(|xs| {
+            xs.retain(|x| !deleted_ids.contains(&x.id));
+        });
+        deleted.set(vec![]);
+        logging::log!("hello {:#?}", deleted_ids);
+    };
+
+    let remove = move |id: Uuid| {
+        let member = member
+            .sons
+            .get()
+            .into_iter()
+            .filter(|x| x.id == id)
+            .collect::<Vec<_>>();
+        for member in member {
+            deleted.update(|xs| xs.push(member));
+        }
+        logging::log!("hello {:#?}", deleted.get_untracked());
+    };
+
+    let restore = move |id: Uuid| {
+        deleted.update(|xs| xs.retain(|x| x.id.to_owned() != id));
+    };
+
+    let each_restored = move || {
+        let deleted = deleted.get().into_iter().map(|x| x.id).collect::<Vec<_>>();
+        member
+            .sons
+            .get()
+            .into_iter()
+            .filter(|x| !deleted.contains(&x.id))
+            .collect::<Vec<_>>()
+    };
+
+    let cancel = move || {
+        cancel();
+        deleted.set(vec![]);
+    };
+
+    view! {
+        <Action when=remove_person cancel=cancel on_submit=on_submit>
+            <div class="col-span-4 flex flex-wrap">
+                <For
+                    each=each_restored
+                    key=move |k| k.id
+                    let:son
+                >
+                    <button
+                        on:click=move |_| {remove(son.id)}
+                        class="m-5 p-5 border-4 h-20 rounded-full hover:bg-black hover:text-white"
+                    >{move || son.name.get()}</button>
+                </For>
+                <For
+                    each=move || deleted.get()
+                    key=move |k| k.id
+                    let:son
+                >
+                    <button
+                        on:click=move |_| {restore(son.id)}
+                        class="m-5 p-5 border-4 h-20 rounded-full bg-black text-white hover:bg-white hover:text-black"
+                    >{move || son.name.get()}</button>
+                </For>
+            </div>
         </Action>
     }
 }
