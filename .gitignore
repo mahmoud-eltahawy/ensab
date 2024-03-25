@@ -1,0 +1,77 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# Compiled output
+ensab_ui/dist
+ensab_ui/tmp
+ensab_ui/out-tsc
+ensab_ui/bazel-out
+
+# Node
+ensab_ui/node_modules
+ensab_ui/npm-debug.log
+ensab_ui/yarn-error.log
+
+# IDEs and editors
+ensab_ui/.idea/
+ensab_ui/.project
+ensab_ui/.classpath
+ensab_ui/.c9/
+ensab_ui/*.launch
+ensab_ui/.settings/
+ensab_ui/*.sublime-workspace
+
+# Visual Studio Code
+ensab_ui/.vscode/*
+ensab_ui/!.vscode/settings.json
+ensab_ui/!.vscode/tasks.json
+ensab_ui/!.vscode/launch.json
+ensab_ui/!.vscode/extensions.json
+ensab_ui/.history/*
+
+# Miscellaneous
+ensab_ui/.angular/cache
+ensab_ui/.sass-cache/
+ensab_ui//connect.lock
+ensab_ui//coverage
+ensab_ui//libpeerconnection.log
+ensab_ui/testem.log
+ensab_ui//typings
+
+# System files
+ensab_ui/.DS_Store
+ensab_ui/Thumbs.db
+
+#api
+ensab_api/HELP.md
+ensab_api/target/
+ensab_api/!.mvn/wrapper/maven-wrapper.jar
+ensab_api/!**/src/main/**/target/
+ensab_api/!**/src/test/**/target/
+
+### STS ###
+ensab_api/.apt_generated
+ensab_api/.classpath
+ensab_api/.factorypath
+ensab_api/.project
+ensab_api/.settings
+ensab_api/.springBeans
+ensab_api/.sts4-cache
+
+### IntelliJ IDEA ###
+ensab_api/.idea
+ensab_api/*.iws
+ensab_api/*.iml
+ensab_api/*.ipr
+
+### NetBeans ###
+ensab_api/nbproject/private/
+ensab_api/nbbuild/
+ensab_api/dist/
+ensab_api/nbdist/
+ensab_api/.nb-gradle/
+ensab_api/build/
+ensab_api/!**/src/main/**/build/
+ensab_api/!**/src/test/**/build/
+
+### VS Code ###
+ensab_api/.vscode/
