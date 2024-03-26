@@ -5,6 +5,6 @@ import { HomeComponent } from './home/home.component';
 
 export const routes: Routes = [
   {path :"",component : HomeComponent},
-  {path :"ftree",component : FtreeFormComponent},
-  {path :"ftree/:name",component : FtreeComponent},
+  {path :"ftree",title : "انشاء شجرة عائلة",component : FtreeFormComponent},
+  {path :"ftree/:name",title : "تفصيل شجرة العائلة",component : FtreeComponent},
 ];

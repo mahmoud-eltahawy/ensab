@@ -23,6 +23,9 @@ export class FtreeFormComponent {
     }
 
     private to_tree_page() {
-      location.href = `ftree/${this.name.value?.trim()}`
+      let name = this.name.value?.trim();
+      if (name?.length !== 0) {
+        location.href = `ftree/${name}`
+      }
     }
 }
