@@ -1,9 +1,11 @@
 <form
   *ngIf="actions()?.add_son()"
-  (submit)="submit_add_son($event)"
+  (input)="on_input()"
+  (submit)="on_submit($event)"
   class="grid grid-cols-4 justify-content-center justify-items-center gap-5 p-10 m-28 border-4 inset-0 rounded-lg z-50 absolute bg-white"
 >
   <input
+      [formControl]="name"
       class="col-span-4 text-center border-2 mx-5 p-2 text-2xl rounded-lg"
       placeholder="الاسم"
       required
@@ -20,11 +22,12 @@
       class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
       type="submit"
   >
-      "تاكيد"
+      تاكيد
   </button>
   <button
       class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+      (click)="actions()?.add_son_done()"
   >
-      "الغاء"
+      الغاء
   </button>
 </form>

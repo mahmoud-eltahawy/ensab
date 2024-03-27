@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, input } from '@angular/core';
 import Member from '../../../member';
-import FtreeSignals from '../../ftreeSignals';
+import ActionsGroup from '../actionsGroup';
 
 @Component({
   selector: 'actions-buttons',
@@ -11,17 +11,6 @@ import FtreeSignals from '../../ftreeSignals';
 })
 export class ActionsButtonsFormComponent {
   member = input<Member>();
-  actions = input<FtreeSignals>()
+  actions = input<ActionsGroup>()
 
-  // add_son_action(){
-  //   this.member.update(x => {
-  //     if (!x) {
-  //       return x;
-  //     }
-  //     const new_sons = x.sons();
-  //     new_sons.push(new Member("hello"));
-  //     return {...x,sons : signal(new_sons)} as Member;
-  //   });
-  //   this.actions()?.add_son_action()
-  // }
 }

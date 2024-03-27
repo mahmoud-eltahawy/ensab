@@ -1,6 +1,6 @@
 import { WritableSignal, signal } from "@angular/core";
 
-export default class FtreeSignals {
+export default class ActionsGroup {
     take_action : WritableSignal<boolean>
     add_son : WritableSignal<boolean>
     remove_son : WritableSignal<boolean>
