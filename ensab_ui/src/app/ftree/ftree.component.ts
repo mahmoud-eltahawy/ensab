@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import Member from '../member';
+import Member from './member-node/member';
 import { MemberNodeComponent } from '../ftree/member-node/member-node.component';
 
 @Component({
@@ -10,13 +10,13 @@ import { MemberNodeComponent } from '../ftree/member-node/member-node.component'
   templateUrl: './ftree.component.html',
 })
 export class FtreeComponent implements OnInit{
-  member : Member = new Member("");
+  member : Member | undefined;
   constructor(private route: ActivatedRoute) { }
 
   ngOnInit() {
     this.route.params
       .subscribe((params) => {
-        this.member = new Member(params['name'])
+        this.member = Member.getInstance(params['name'])
       }
     );
   }

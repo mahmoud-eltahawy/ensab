@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, input } from '@angular/core';
-import Member from '../../../member';
+import Member from '../member';
 import ActionsGroup from '../actionsGroup';
 
 @Component({

@@ -1,16 +1,25 @@
 import { signal, WritableSignal } from "@angular/core"
 
 export default class Member {
+    private static instance : Member;
+
     id: string;
     name: WritableSignal<String>;
     is_male: boolean;
     sons: WritableSignal<Member[]>;
 
-    constructor(name : string) {
+    private constructor(name : string) {
       this.id = crypto.randomUUID();
       this.name = signal(name);
       this.is_male = true;
       this.sons = signal([])
+    }
+
+    static getInstance(name : string): Member {
+      if (!this.instance) {
+        Member.instance =  new Member(name)
+      }
+      return Member.instance
     }
 
     with_sons(names: string[]): void {

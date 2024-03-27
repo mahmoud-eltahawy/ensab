@@ -2,7 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, input, signal } from '@angular/core';
 import ActionsGroup from '../../actionsGroup';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import Member from '../../../../member';
+import Member from '../../member';
 
 @Component({
   selector: 'add-son',

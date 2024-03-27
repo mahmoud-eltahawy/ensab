@@ -1,5 +1,5 @@
 import { Component, model, signal } from '@angular/core';
-import Member from '../../member';
+import Member from './member';
 import { NgFor, NgIf } from '@angular/common';
 import ActionsGroup from './actionsGroup';
 import { ActionsButtonsFormComponent } from './actions-buttons-form/actions-buttons-form.component';
