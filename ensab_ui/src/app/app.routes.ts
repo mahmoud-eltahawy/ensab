@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { FtreeFormComponent } from './ftree-form/ftree-form.component';
+import { FtreeFormComponent } from './ftree/ftree-form/ftree-form.component';
 import { FtreeComponent } from './ftree/ftree.component';
 import { HomeComponent } from './home/home.component';
 

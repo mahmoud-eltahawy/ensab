@@ -39,12 +39,12 @@ export default class Member {
         this.sons.update(sons => {
             const son_with_similar_name = sons.find(x => x.name() == person_from_name.name());
             if (son_with_similar_name) {
-              const person_from_name_sons = person_from_name.sons()
+              const similar_sons = son_with_similar_name.sons()
               son_with_similar_name.sons.update(sons => {
-                for(const person of person_from_name_sons) {
+                for(const person of similar_sons) {
                   person.is_male = is_male;
                 }
-                return [...sons,...person_from_name_sons]
+                return [...sons,...similar_sons]
               })
               return []
             } else {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import Member from '../member';
-import { MemberNodeComponent } from '../member-node/member-node.component';
+import { MemberNodeComponent } from '../ftree/member-node/member-node.component';
 
 @Component({
   selector: 'app-ftree',
