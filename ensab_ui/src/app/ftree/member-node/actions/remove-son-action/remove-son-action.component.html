@@ -1,30 +1,32 @@
 <form
   *ngIf="actions()?.remove_son()"
   (submit)="on_submit($event)"
-  class="grid grid-cols-4 justify-content-center justify-items-center gap-5 p-10 m-28 border-4 inset-0 rounded-lg z-50 absolute bg-white"
+  class="text-3xl text-pretty text-zinc-300 rounded-lg bg-gray-700 border-gray-500 hover:border-gray-700 grid justify-content-center justify-items-center gap-5 p-10 mx-32 my-10 border-4 size-50 z-10 absolute inset-0"
 >
-  <div class="col-span-4 flex flex-wrap">
+  <div class="border-2 col-span-4 flex flex-wrap rounded-lg bg-gray-950 border-gray-500 hover:border-gray-950">
     <button
         *ngFor="let son of get_restored()"
         (click)="remove(son.id)"
-        class="m-5 p-5 border-4 h-20 rounded-full hover:bg-black hover:text-white"
+        class="m-5 p-5 border-4 h-20 rounded-full bg-lime-700 hover:bg-red-700 hover:text-white"
     >{{son.name()}}</button>
     <button
         *ngFor="let son of get_removed()"
         (click)="restore(son.id)"
-        class="m-5 p-5 border-4 h-20 rounded-full hover:bg-white hover:text-black bg-black text-white"
+        class="m-5 p-5 border-4 h-20 rounded-full bg-red-700 hover:bg-lime-700 hover:text-black  text-white"
     >{{son.name()}}</button>
   </div>
-  <button
-      class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
-      type="submit"
-  >
-      تاكيد
-  </button>
-  <button
-      class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
-      (click)="actions()?.remove_son_done()"
-  >
-      الغاء
-  </button>
+  <div class="col-span-4 grid grid-cols-2">
+    <button
+        class="bg-green-950 border-green-600 hover:border-green-950 border-2 w-56 h-20 text-2xl p-5 m-5 rounded-lg"
+        type="submit"
+    >
+        تاكيد
+    </button>
+    <button
+        class="bg-red-950 border-red-600 hover:border-red-950 border-2 w-56 h-20 text-2xl p-5 m-5 rounded-lg"
+        (click)="actions()?.remove_son_done()"
+    >
+        الغاء
+    </button>
+  </div>
 </form>

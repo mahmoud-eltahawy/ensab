@@ -12,16 +12,19 @@ import Member from '../../member';
 })
 export class AddSonActionComponent {
   name = new FormControl('')
+  is_male = new FormControl('1');
   member = input<Member>()
 
   actions = input<ActionsGroup>()
   on_submit(event: Event) {
     event.preventDefault()
     const names = this.name.value?.split(',')
-    if(names) {
-      for (const name of names) {
-        this.member()?.add_son(name,true)
-      }
+    if(!names || names[0] === '') {
+      return;
+    }
+    const is_male = Boolean(this.is_male.value)
+    for (const name of names) {
+      this.member()?.add_son(name,is_male)
     }
     this.name.setValue("")
     this.actions()?.add_son_done()
