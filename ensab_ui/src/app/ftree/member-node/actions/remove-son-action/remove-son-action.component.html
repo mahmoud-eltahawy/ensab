@@ -1,0 +1,30 @@
+<form
+  *ngIf="actions()?.remove_son()"
+  (submit)="on_submit($event)"
+  class="grid grid-cols-4 justify-content-center justify-items-center gap-5 p-10 m-28 border-4 inset-0 rounded-lg z-50 absolute bg-white"
+>
+  <div class="col-span-4 flex flex-wrap">
+    <button
+        *ngFor="let son of get_restored()"
+        (click)="remove(son.id)"
+        class="m-5 p-5 border-4 h-20 rounded-full hover:bg-black hover:text-white"
+    >{{son.name()}}</button>
+    <button
+        *ngFor="let son of get_removed()"
+        (click)="restore(son.id)"
+        class="m-5 p-5 border-4 h-20 rounded-full hover:bg-white hover:text-black bg-black text-white"
+    >{{son.name()}}</button>
+  </div>
+  <button
+      class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+      type="submit"
+  >
+      تاكيد
+  </button>
+  <button
+      class="border-2 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg hover:rounded-full"
+      (click)="actions()?.remove_son_done()"
+  >
+      الغاء
+  </button>
+</form>

@@ -15,8 +15,8 @@ export class AddSonActionComponent {
   member = input<Member>()
 
   actions = input<ActionsGroup>()
-  on_submit($event: Event) {
-    event?.preventDefault()
+  on_submit(event: Event) {
+    event.preventDefault()
     const names = this.name.value?.split(',')
     if(names) {
       for (const name of names) {

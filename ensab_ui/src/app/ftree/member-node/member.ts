@@ -15,8 +15,8 @@ export default class Member {
       this.sons = signal([])
     }
 
-    static getInstance(name : string): Member {
-      if (!this.instance) {
+    static getInstance(name : string | undefined = undefined): Member {
+      if (!this.instance && name) {
         Member.instance =  new Member(name)
       }
       return Member.instance
