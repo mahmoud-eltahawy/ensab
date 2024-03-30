@@ -1,7 +1,6 @@
 import { NgIf } from '@angular/common';
-import { Component, input } from '@angular/core';
-import Member from '../member';
-import ActionsGroup from '../actionsGroup';
+import { Component, computed, input } from '@angular/core';
+import Member from '../../member';
 
 @Component({
   selector: 'actions-buttons',
@@ -11,6 +10,5 @@ import ActionsGroup from '../actionsGroup';
 })
 export class ActionsButtonsFormComponent {
   member = input<Member>();
-  actions = input<ActionsGroup>()
-
+  actions = computed(() => this.member()?.getActions())
 }

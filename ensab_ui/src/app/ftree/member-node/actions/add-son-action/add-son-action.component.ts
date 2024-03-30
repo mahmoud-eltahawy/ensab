@@ -1,13 +1,13 @@
 import { NgIf } from '@angular/common';
-import { Component, input, signal } from '@angular/core';
-import ActionsGroup from '../../actionsGroup';
+import { Component, computed, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import Member from '../../member';
+import { ActionComponent } from '../action/action.component';
 
 @Component({
   selector: 'add-son',
   standalone: true,
-  imports: [NgIf,ReactiveFormsModule],
+  imports: [NgIf,ReactiveFormsModule,ActionComponent],
   templateUrl: './add-son-action.component.html',
 })
 export class AddSonActionComponent {
@@ -15,9 +15,8 @@ export class AddSonActionComponent {
   is_male = new FormControl('1');
   member = input<Member>()
 
-  actions = input<ActionsGroup>()
-  on_submit(event: Event) {
-    event.preventDefault()
+  actions = computed(() => this.member()?.getActions())
+  on_submit() {
     const names = this.name.value?.split(',')
     if(!names || names[0] === '') {
       return;
@@ -31,6 +30,7 @@ export class AddSonActionComponent {
   }
 
   is_only = signal(true)
+
   on_input(){
     const value = this.name.value;
     if (value?.includes(',')) {

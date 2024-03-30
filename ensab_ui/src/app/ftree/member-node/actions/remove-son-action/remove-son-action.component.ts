@@ -1,22 +1,21 @@
 import { NgFor, NgIf } from '@angular/common';
 import { Component, computed, input, signal } from '@angular/core';
-import ActionsGroup from '../../actionsGroup';
 import Member from '../../member';
+import { ActionComponent } from '../action/action.component';
 
 @Component({
   selector: 'remove-son',
   standalone: true,
-  imports: [NgIf,NgFor],
+  imports: [NgIf,NgFor,ActionComponent],
   templateUrl: './remove-son-action.component.html',
 })
 export class RemoveSonActionComponent {
-  actions = input<ActionsGroup>()
   member = input<Member>()
+  actions = computed(() => this.member()?.getActions())
 
   removed = signal<string[]>([])
 
-  on_submit(event : Event) {
-    event.preventDefault()
+  on_submit() {
     this.member()?.sons.update(xs => this.get_restored())
     this.actions()?.remove_son_done()
   }

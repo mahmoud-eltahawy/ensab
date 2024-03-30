@@ -3,6 +3,7 @@ import { signal, WritableSignal } from "@angular/core"
 export default class Member {
     private static instance : Member;
 
+    private actions : ActionsGroup | undefined  
     id: string;
     name: WritableSignal<string>;
     is_male: boolean;
@@ -14,6 +15,14 @@ export default class Member {
       this.is_male = true;
       this.sons = signal([])
     }
+
+    getActions() : ActionsGroup {
+      if(!this.actions) {
+        this.actions = new ActionsGroup()
+      }
+      return this.actions
+    }
+
 
     static getInstance(name : string | undefined = undefined): Member {
       if (!this.instance && name) {
@@ -63,4 +72,49 @@ export default class Member {
         });
     }
   
+}
+
+class ActionsGroup {
+    take_action : WritableSignal<boolean>
+    add_son : WritableSignal<boolean>
+    remove_son : WritableSignal<boolean>
+    rename_son : WritableSignal<boolean>
+
+    constructor() {
+        this.take_action = signal(false)
+        this.add_son = signal(false)
+        this.remove_son = signal(false)
+        this.rename_son = signal(false)
+    }
+
+    toggle_action() {
+        this.take_action.update(x => !x);  
+    } 
+
+    add_son_action() {
+        this.add_son.set(true)
+        this.toggle_action()
+    }
+
+    add_son_done() {
+        this.add_son.set(false)
+    }
+
+    remove_son_action() {
+        this.remove_son.set(true)
+        this.toggle_action()
+    }
+
+    remove_son_done() {
+        this.remove_son.set(false)
+    }
+
+    rename_son_action(){
+        this.rename_son.set(true)
+        this.toggle_action()
+    }
+
+    rename_son_done(){
+        this.rename_son.set(false)
+    }
 }
