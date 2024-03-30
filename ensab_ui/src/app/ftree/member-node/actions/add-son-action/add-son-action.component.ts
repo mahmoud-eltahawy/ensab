@@ -15,7 +15,7 @@ export class AddSonActionComponent {
   is_male = new FormControl('1');
   member = input<Member>()
 
-  actions = computed(() => this.member()?.getActions())
+  actions = computed(() => this.member()?.actions)
   on_submit() {
     const names = this.name.value?.split(',')
     if(!names || names[0] === '') {

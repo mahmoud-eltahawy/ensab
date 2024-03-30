@@ -14,7 +14,7 @@ export class RenameActionComponent {
   member = input<Member>()
   name_control = new FormControl('')
 
-  actions = computed(() => this.member()?.getActions())
+  actions = computed(() => this.member()?.actions)
 
   on_submit() {
     const name = this.name_control.value;

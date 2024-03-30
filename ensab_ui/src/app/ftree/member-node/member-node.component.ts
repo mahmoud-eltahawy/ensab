@@ -15,5 +15,5 @@ import { ActionsComponent } from './actions/actions.component';
 })
 export class MemberNodeComponent {
   member = model<Member>();
-  actions = computed(() => this.member()?.getActions())
+  actions = computed(() => this.member()?.actions)
 }

@@ -3,7 +3,7 @@ import { signal, WritableSignal } from "@angular/core"
 export default class Member {
     private static instance : Member;
 
-    private actions : ActionsGroup | undefined  
+    actions = new ActionsGroup()  
     id: string;
     name: WritableSignal<string>;
     is_male: boolean;
@@ -15,14 +15,6 @@ export default class Member {
       this.is_male = true;
       this.sons = signal([])
     }
-
-    getActions() : ActionsGroup {
-      if(!this.actions) {
-        this.actions = new ActionsGroup()
-      }
-      return this.actions
-    }
-
 
     static getInstance(name : string | undefined = undefined): Member {
       if (!this.instance && name) {

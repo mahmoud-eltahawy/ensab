@@ -10,5 +10,5 @@ import Member from '../../member';
 })
 export class ActionsButtonsFormComponent {
   member = input<Member>();
-  actions = computed(() => this.member()?.getActions())
+  actions = computed(() => this.member()?.actions)
 }

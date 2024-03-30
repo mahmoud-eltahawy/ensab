@@ -11,7 +11,7 @@ import { ActionComponent } from '../action/action.component';
 })
 export class RemoveSonActionComponent {
   member = input<Member>()
-  actions = computed(() => this.member()?.getActions())
+  actions = computed(() => this.member()?.actions)
 
   removed = signal<string[]>([])
 
