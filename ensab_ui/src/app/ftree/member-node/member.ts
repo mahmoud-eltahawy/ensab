@@ -45,7 +45,7 @@ export default class Member {
     }
 
     add_son(name: string, is_male: boolean) {
-        let person_from_name = Member.create_from_name(name);
+        const person_from_name = Member.create_from_name(name);
         this.sons.update(sons => {
             const son_with_similar_name = sons.find(x => x.name() == person_from_name.name());
             if (son_with_similar_name) {
