@@ -4,7 +4,7 @@ export default class Member {
     private static instance : Member;
 
     id: string;
-    name: WritableSignal<String>;
+    name: WritableSignal<string>;
     is_male: boolean;
     sons: WritableSignal<Member[]>;
 
