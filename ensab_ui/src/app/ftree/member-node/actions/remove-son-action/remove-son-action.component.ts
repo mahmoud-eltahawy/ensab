@@ -11,13 +11,11 @@ import { ActionComponent } from '../action/action.component';
 })
 export class RemoveSonActionComponent {
   member = input<Member>()
-  actions = computed(() => this.member()?.actions)
-
   removed = signal<string[]>([])
 
   on_submit() {
     this.member()?.sons.update(xs => this.get_restored())
-    this.actions()?.remove_son_done()
+    this.member()?.actions?.remove_son_done()
   }
 
   remove(id : string) {

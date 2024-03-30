@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import Member from '../../member';
 
 @Component({
@@ -10,5 +10,4 @@ import Member from '../../member';
 })
 export class ActionsButtonsFormComponent {
   member = input<Member>();
-  actions = computed(() => this.member()?.actions)
 }

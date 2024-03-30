@@ -1,7 +1,7 @@
 <action 
-  [cond]="actions()?.rename_son()"
+  [cond]="member()?.actions?.rename_son()"
   (submit)="on_submit()"
-  (cancel)="actions()?.rename_son_done()"
+  (cancel)="member()?.actions?.rename_son_done()"
 >
   <input
       [formControl]="name_control"

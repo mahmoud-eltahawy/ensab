@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, computed, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import Member from '../../member';
 import { ActionComponent } from '../action/action.component';
@@ -14,14 +14,12 @@ export class RenameActionComponent {
   member = input<Member>()
   name_control = new FormControl('')
 
-  actions = computed(() => this.member()?.actions)
-
   on_submit() {
     const name = this.name_control.value;
     if (!name) {
       return;
     }
     this.member()?.name.set(name)
-    this.actions()?.rename_son_done()
+    this.member()?.actions?.rename_son_done()
   }
 }

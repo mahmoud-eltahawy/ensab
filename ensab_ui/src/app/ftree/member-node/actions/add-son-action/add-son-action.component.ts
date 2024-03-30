@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import Member from '../../member';
 import { ActionComponent } from '../action/action.component';
@@ -15,7 +15,6 @@ export class AddSonActionComponent {
   is_male = new FormControl('1');
   member = input<Member>()
 
-  actions = computed(() => this.member()?.actions)
   on_submit() {
     const names = this.name.value?.split(',')
     if(!names || names[0] === '') {
@@ -26,7 +25,7 @@ export class AddSonActionComponent {
       this.member()?.add_son(name,is_male)
     }
     this.name.setValue("")
-    this.actions()?.add_son_done()
+    this.member()?.actions.add_son_done()
   }
 
   is_only = signal(true)
