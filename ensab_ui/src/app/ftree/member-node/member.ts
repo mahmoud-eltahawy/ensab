@@ -2,6 +2,13 @@ import { signal, WritableSignal } from "@angular/core"
 
 type Uuid = `${string}-${string}-${string}-${string}-${string}`
 
+type RawMember = {
+  id : Uuid;
+  name : string;
+  is_male : boolean,
+  sons : RawMember[]
+}
+
 export default class Member {
     private static instance : Member;
 
@@ -24,6 +31,16 @@ export default class Member {
         Member.instance =  new Member(name)
       }
       return Member.instance
+    }
+
+    raw() : RawMember {
+      const result : RawMember = {
+        id : this.id,
+        name : this.name(),
+        is_male : this.is_male,
+        sons : this.sons().map(x => x.raw())
+      } as const;
+      return result;
     }
 
     with_sons(names: string[]): void {
@@ -66,7 +83,6 @@ export default class Member {
             }
         });
     }
-  
 }
 
 class ActionsGroup {
