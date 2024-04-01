@@ -12,8 +12,7 @@ export class ActionComponent {
   submit = output()
   cancel = output()
 
-  on_submit(event : SubmitEvent) {
-    event.preventDefault()
+  on_submit() {
     this.submit.emit()
   }
 

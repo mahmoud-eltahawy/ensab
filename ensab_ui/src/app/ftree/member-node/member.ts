@@ -1,10 +1,12 @@
 import { signal, WritableSignal } from "@angular/core"
 
+type Uuid = `${string}-${string}-${string}-${string}-${string}`
+
 export default class Member {
     private static instance : Member;
 
     actions : ActionsGroup;  
-    id: string;
+    id : Uuid;
     name: WritableSignal<string>;
     is_male: boolean;
     sons: WritableSignal<Member[]>;
