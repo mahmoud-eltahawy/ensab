@@ -41,5 +41,4 @@ ensab_ui//typings
 ensab_ui/.DS_Store
 ensab_ui/Thumbs.db
 
-EnsabApi/obj
-EnsabApi/bin
+ensab_api/target
