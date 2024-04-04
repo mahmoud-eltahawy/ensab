@@ -1,0 +1,10 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS member (
+  id UUID PRIMARY KEY NOT NULL,
+  name VARCHAR(30) NOT NULL,
+  is_male BOOLEAN NOT NULL,
+  insert_date TIMESTAMP NOT NULL,
+  parent_id Uuid,
+  FOREIGN KEY (parent_id) REFERENCES member(id) ON DELETE CASCADE
+);

@@ -28,6 +28,8 @@ async fn main() -> anyhow::Result<()> {
         .await
         .expect("can't connect to database");
 
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
     println!("binded at {}", binded_at);
 
     let state = AppState { pool };
