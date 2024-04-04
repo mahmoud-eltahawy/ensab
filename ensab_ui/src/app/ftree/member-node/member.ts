@@ -1,9 +1,7 @@
 import { signal, WritableSignal } from "@angular/core"
 
-type Uuid = `${string}-${string}-${string}-${string}-${string}`
-
 type RawMember = {
-  id : Uuid;
+  id : string;
   name : string;
   is_male : boolean,
   sons : RawMember[]
@@ -13,17 +11,21 @@ export default class Member {
     private static instance : Member;
 
     actions : ActionsGroup;  
-    id : Uuid;
+    id : string;
     name: WritableSignal<string>;
     is_male: boolean;
     sons: WritableSignal<Member[]>;
 
-    private constructor(name : string) {
-      this.id = crypto.randomUUID();
+    private constructor(name : string,id = crypto.randomUUID() as string,is_male = true,sons = [] as RawMember[]) {
+      this.id = id;
       this.name = signal(name);
-      this.is_male = true;
-      this.sons = signal([])
+      this.is_male = is_male;
       this.actions = new ActionsGroup()
+      if(sons.length === 0) {
+        this.sons = signal([])
+      } else {
+        this.sons = signal(sons.map(x => new Member(x.name,x.id,x.is_male,x.sons)))
+      }
     }
 
     static getInstance(name : string | undefined = undefined): Member {
@@ -31,6 +33,10 @@ export default class Member {
         Member.instance =  new Member(name)
       }
       return Member.instance
+    }
+
+    static getInstanceFromRaw({id,name,is_male,sons} : RawMember) : Member {
+      return new Member(name,id,is_male,sons);
     }
 
     raw() : RawMember {

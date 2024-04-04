@@ -1,10 +1,14 @@
 use std::time::Duration;
 
-use axum::Router;
+use axum::{
+    http::{HeaderValue, Method},
+    Router,
+};
 use member::RawMember;
 
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 
 mod member;
 mod results;
@@ -36,6 +40,11 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .nest("/member", RawMember::routes())
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:4200".parse::<HeaderValue>()?)
+                .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::PUT]),
+        )
         .with_state(state);
 
     let listener = TcpListener::bind(binded_at).await?;

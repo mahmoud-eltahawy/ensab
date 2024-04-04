@@ -70,7 +70,6 @@ impl RawMember {
         query!("delete from member where id = $1", id)
             .execute(&pool)
             .await?;
-        println!("delete member with id : {}", id);
         Ok(())
     }
 
