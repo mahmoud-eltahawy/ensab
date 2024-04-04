@@ -1,8 +1,9 @@
-use std::{collections::HashMap, env};
+use std::time::Duration;
 
-use axum::{routing::get, Router};
+use axum::Router;
 use member::RawMember;
 
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use tokio::net::TcpListener;
 
 mod member;
@@ -14,26 +15,33 @@ async fn main() -> anyhow::Result<()> {
 
     dotenvy::dotenv()?;
 
-    let vars = env::vars();
-    let vars = vars
-        .filter(|(key, _)| key == "Port" || key == "Host")
-        .collect::<HashMap<_, _>>();
-    let binded_at = format!(
-        "{}:{}",
-        vars.get("Host").unwrap(),
-        vars.get("Port").unwrap()
-    );
+    let host = std::env::var("Host")?;
+    let port = std::env::var("Port")?;
+    let binded_at = format!("{}:{}", host, port);
+
+    let db_connection_str = std::env::var("DATABASE_URL")?;
+
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(3))
+        .connect(&db_connection_str)
+        .await
+        .expect("can't connect to database");
 
     println!("binded at {}", binded_at);
 
+    let state = AppState { pool };
+
     let app = Router::new()
-        .route("/", get(root))
-        .nest("/member/", RawMember::routes());
+        .nest("/member", RawMember::routes())
+        .with_state(state);
+
     let listener = TcpListener::bind(binded_at).await?;
     axum::serve(listener, app).await?;
     Ok(())
 }
 
-async fn root() -> &'static str {
-    "Hello, World!"
+#[derive(Clone)]
+struct AppState {
+    pool: Pool<Postgres>,
 }

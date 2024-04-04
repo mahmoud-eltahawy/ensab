@@ -1,14 +1,15 @@
 use anyhow::Result;
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     http::StatusCode,
-    routing::{delete, get, post},
+    routing::{delete, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
+
 use uuid::Uuid;
 
-use crate::results::AppError;
+use crate::{results::AppError, AppState};
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct RawMember {
@@ -24,7 +25,10 @@ impl RawMember {
         Ok(())
     }
 
-    async fn create(Json(member): Json<Self>) -> Result<StatusCode, AppError> {
+    async fn create(
+        State(pool): State<AppState>,
+        Json(member): Json<Self>,
+    ) -> Result<StatusCode, AppError> {
         member.db_create().await?;
         Ok(StatusCode::CREATED)
     }
@@ -34,7 +38,10 @@ impl RawMember {
         Ok(())
     }
 
-    async fn delete(Path(id): Path<Uuid>) -> Result<StatusCode, AppError> {
+    async fn delete(
+        State(pool): State<AppState>,
+        Path(id): Path<Uuid>,
+    ) -> Result<StatusCode, AppError> {
         Self::db_delete(id).await?;
         Ok(StatusCode::OK)
     }
@@ -49,15 +56,17 @@ impl RawMember {
         })
     }
 
-    async fn read(Path(id): Path<Uuid>) -> Result<(StatusCode, Json<RawMember>), AppError> {
+    async fn read(
+        State(pool): State<AppState>,
+        Path(id): Path<Uuid>,
+    ) -> Result<(StatusCode, Json<RawMember>), AppError> {
         let member = Self::db_read(id).await?;
         Ok((StatusCode::CREATED, Json(member)))
     }
 
-    pub fn routes() -> Router {
+    pub fn routes() -> Router<AppState> {
         Router::new()
             .route("/", post(Self::create))
-            .route("/:id", delete(Self::delete))
-            .route("/:id", get(Self::read))
+            .route("/:id", delete(Self::delete).get(Self::read))
     }
 }
