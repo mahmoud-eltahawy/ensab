@@ -66,7 +66,10 @@ impl RawMember {
         Ok(StatusCode::CREATED)
     }
 
-    async fn db_delete(id: Uuid) -> Result<(), anyhow::Error> {
+    async fn db_delete(pool: Pool<Postgres>, id: Uuid) -> Result<(), anyhow::Error> {
+        query!("delete from member where id = $1", id)
+            .execute(&pool)
+            .await?;
         println!("delete member with id : {}", id);
         Ok(())
     }
@@ -75,22 +78,33 @@ impl RawMember {
         State(state): State<AppState>,
         Path(id): Path<Uuid>,
     ) -> Result<StatusCode, AppError> {
-        Self::db_delete(id).await?;
+        Self::db_delete(state.pool, id).await?;
         Ok(StatusCode::OK)
     }
 
-    async fn db_read(pool: Pool<Postgres>, id: Uuid) -> Result<Self, anyhow::Error> {
-        println!("read member by id : {}", id);
-        let num = query!("select 1 + 1 as sum")
-            .fetch_one(&pool)
+    #[async_recursion]
+    async fn db_read(pool: &Pool<Postgres>, id: Uuid) -> Result<Self, Box<sqlx::Error>> {
+        let sons_ids = query!("select id from member where parent_id = $1", id)
+            .fetch_all(pool)
             .await?
-            .sum
-            .unwrap();
+            .into_iter()
+            .map(|x| x.id)
+            .collect::<Vec<_>>();
+        let mut sons = Vec::new();
+        for son_id in sons_ids {
+            let son = Self::db_read(pool, son_id).await?;
+            sons.push(son);
+        }
+        let member_record = query!("select name,is_male from member where id = $1", id)
+            .fetch_one(pool)
+            .await?;
+        let name: String = member_record.name;
+        let is_male: bool = member_record.is_male;
         Ok(Self {
             id,
-            name: format!("mahmoud {}", num),
-            is_male: true,
-            sons: vec![],
+            name,
+            is_male,
+            sons,
         })
     }
 
@@ -98,7 +112,7 @@ impl RawMember {
         State(state): State<AppState>,
         Path(id): Path<Uuid>,
     ) -> Result<(StatusCode, Json<RawMember>), AppError> {
-        let member = Self::db_read(state.pool, id).await?;
+        let member = Self::db_read(&state.pool, id).await?;
         Ok((StatusCode::CREATED, Json(member)))
     }
 
