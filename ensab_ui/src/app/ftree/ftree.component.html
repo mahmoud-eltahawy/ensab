@@ -1,5 +1,5 @@
 <section class="grid justify-items-center overflow-auto">
-    <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
-    <member-node [member]="member"/>
-    <button  class="text-center m-5 text-2xl">حفظ</button>
+  <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
+  <member-node [member]="member" />
+  <button class="text-center m-5 text-2xl" (click)="createUpdate()">{{ create ?"حفظ" : "تحديث"}}</button>
 </section>

@@ -12,10 +12,23 @@ import { HttpClientModule,HttpClient } from '@angular/common/http';
 })
 export class FtreeComponent implements OnInit{
   member : Member | undefined;
+  create = true;//true means to create. false to update 
   constructor(
     private route: ActivatedRoute,
     private http : HttpClient
-  ) { }
+  ) {}
+
+  createUpdate() {
+    if (this.create) {
+      this.http.post("http://localhost:8080/member",Member.getInstance().raw())
+        .subscribe(x => {
+        console.log(x)
+      })
+      console.log("create")
+    } else {
+      console.log("update")
+    }
+  }
 
   ngOnInit() {
     this.route.params
@@ -31,6 +44,7 @@ export class FtreeComponent implements OnInit{
           .subscribe(x => {
             const member = Member.getInstanceFromRaw(x as any);
             this.member = member;
+            this.create = false;
           });
         } catch(e) {
           console.log(e) 

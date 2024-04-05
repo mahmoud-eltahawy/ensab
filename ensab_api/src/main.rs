@@ -1,7 +1,10 @@
 use std::time::Duration;
 
 use axum::{
-    http::{HeaderValue, Method},
+    http::{
+        header::{AUTHORIZATION, CONTENT_TYPE},
+        HeaderValue, Method,
+    },
     Router,
 };
 use member::RawMember;
@@ -43,6 +46,7 @@ async fn main() -> anyhow::Result<()> {
         .layer(
             CorsLayer::new()
                 .allow_origin("http://localhost:4200".parse::<HeaderValue>()?)
+                .allow_headers([AUTHORIZATION, CONTENT_TYPE])
                 .allow_methods([Method::GET, Method::POST, Method::DELETE, Method::PUT]),
         )
         .with_state(state);
