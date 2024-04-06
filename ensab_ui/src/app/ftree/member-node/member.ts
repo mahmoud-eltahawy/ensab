@@ -7,9 +7,16 @@ type RawMember = {
   sons : RawMember[]
 }
 
+type SonlessRawMember = {
+  id : string;
+  name : string;
+  is_male : boolean,
+}
+
 export default class Member {
     private static instance : Member;
 
+    static updates : WritableSignal<SonlessRawMember[]> = signal([]); 
     actions : ActionsGroup;  
     id : string;
     name: WritableSignal<string>;
@@ -26,6 +33,24 @@ export default class Member {
       } else {
         this.sons = signal(sons.map(x => new Member(x.name,x.id,x.is_male,x.sons)))
       }
+    }
+
+    static record_member_update(member : SonlessRawMember) {
+      const old_member = Member.updates().find(x => x.id === member.id);
+      if(old_member) {
+        old_member.name = member.name; 
+        old_member.is_male = member.is_male;
+      } else {
+        Member.updates.update(xs => [...xs,member])
+      }
+      // TODO : check if the fields are matching original member and if so delete the update
+      console.log(Member.updates())
+    }
+
+    static get_and_clear_updates(){
+      const updates =  Member.updates();
+      Member.updates.set([])
+      return updates;
     }
 
     static getInstance(name : string | undefined = undefined): Member {
@@ -45,6 +70,14 @@ export default class Member {
         name : this.name(),
         is_male : this.is_male,
         sons : this.sons().map(x => x.raw())
+      } as const;
+      return result;
+    }
+    sonless_raw() : SonlessRawMember {
+      const result : SonlessRawMember = {
+        id : this.id,
+        name : this.name(),
+        is_male : this.is_male,
       } as const;
       return result;
     }

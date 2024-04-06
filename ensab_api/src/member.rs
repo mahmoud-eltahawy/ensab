@@ -15,10 +15,17 @@ use chrono::{NaiveDateTime, Utc};
 
 #[derive(Serialize, Deserialize)]
 pub(crate) struct RawMember {
-    pub(crate) id: Uuid,
-    pub(crate) name: String,
-    pub(crate) is_male: bool,
-    pub(crate) sons: Vec<RawMember>,
+    pub id: Uuid,
+    pub name: String,
+    pub is_male: bool,
+    pub sons: Vec<RawMember>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub(crate) struct SonlessRawMember {
+    pub id: Uuid,
+    pub name: String,
+    pub is_male: bool,
 }
 
 use async_recursion::async_recursion;
@@ -51,6 +58,28 @@ impl RawMember {
 
         Ok(())
     }
+
+    async fn db_update(
+        pool: Pool<Postgres>,
+        members: Vec<SonlessRawMember>,
+    ) -> Result<(), sqlx::Error> {
+        let mut transaction = pool.begin().await?;
+        for member in members {
+            query!(
+                r#"
+                update member set name = $2,is_male = $3 where id = $1
+                "#,
+                member.id,
+                member.name,
+                member.is_male
+            )
+            .execute(&mut *transaction)
+            .await?;
+        }
+        transaction.commit().await?;
+        Ok(())
+    }
+
     async fn db_create(self, pool: Pool<Postgres>) -> Result<(), anyhow::Error> {
         let mut transaction = pool.begin().await?;
         self.store_member(&mut transaction, None).await?;
@@ -64,6 +93,14 @@ impl RawMember {
     ) -> Result<StatusCode, AppError> {
         member.db_create(state.pool).await?;
         Ok(StatusCode::CREATED)
+    }
+
+    async fn update(
+        State(state): State<AppState>,
+        Json(members): Json<Vec<SonlessRawMember>>,
+    ) -> Result<StatusCode, AppError> {
+        Self::db_update(state.pool, members).await?;
+        Ok(StatusCode::OK)
     }
 
     async fn db_delete(pool: Pool<Postgres>, id: Uuid) -> Result<(), anyhow::Error> {
@@ -117,7 +154,7 @@ impl RawMember {
 
     pub fn routes() -> Router<AppState> {
         Router::new()
-            .route("/", post(Self::create))
+            .route("/", post(Self::create).put(Self::update))
             .route("/:id", delete(Self::delete).get(Self::read))
     }
 }
