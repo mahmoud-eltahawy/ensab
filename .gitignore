@@ -31,11 +31,11 @@ ensab_ui/.history/*
 # Miscellaneous
 ensab_ui/.angular/cache
 ensab_ui/.sass-cache/
-ensab_ui//connect.lock
-ensab_ui//coverage
-ensab_ui//libpeerconnection.log
-ensab_ui/testem.log
-ensab_ui//typings
+ensab_ui/connect.lock
+ensab_ui/coverage
+ensab_ui/libpeerconnection.log
+ensab_ui/estem.log
+ensab_ui/typings
 
 # System files
 ensab_ui/.DS_Store

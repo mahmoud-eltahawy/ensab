@@ -32,7 +32,7 @@ use async_recursion::async_recursion;
 
 impl RawMember {
     #[async_recursion]
-    async fn store_member(
+    async fn db_create(
         self,
         transaction: &mut Transaction<'_, Postgres>,
         parent_id: Option<Uuid>,
@@ -53,7 +53,7 @@ impl RawMember {
         .execute(&mut **transaction)
         .await?;
         for son in self.sons {
-            son.store_member(transaction, Some(self.id)).await?;
+            son.db_create(transaction, Some(self.id)).await?;
         }
 
         Ok(())
@@ -80,18 +80,26 @@ impl RawMember {
         Ok(())
     }
 
-    async fn db_create(self, pool: Pool<Postgres>) -> Result<(), anyhow::Error> {
-        let mut transaction = pool.begin().await?;
-        self.store_member(&mut transaction, None).await?;
-        transaction.commit().await?;
-        Ok(())
-    }
-
-    async fn create(
+    async fn create_fatherless(
         State(state): State<AppState>,
         Json(member): Json<Self>,
     ) -> Result<StatusCode, AppError> {
-        member.db_create(state.pool).await?;
+        let mut transaction = state.pool.begin().await?;
+        member.db_create(&mut transaction, None).await?;
+        transaction.commit().await?;
+        Ok(StatusCode::CREATED)
+    }
+
+    async fn create_sons(
+        State(state): State<AppState>,
+        Path(parent_id): Path<Uuid>,
+        Json(members): Json<Vec<Self>>,
+    ) -> Result<StatusCode, AppError> {
+        let mut transaction = state.pool.begin().await?;
+        for member in members {
+            member.db_create(&mut transaction, Some(parent_id)).await?;
+        }
+        transaction.commit().await?;
         Ok(StatusCode::CREATED)
     }
 
@@ -154,7 +162,10 @@ impl RawMember {
 
     pub fn routes() -> Router<AppState> {
         Router::new()
-            .route("/", post(Self::create).put(Self::update))
-            .route("/:id", delete(Self::delete).get(Self::read))
+            .route("/", post(Self::create_fatherless).put(Self::update))
+            .route(
+                "/:id",
+                delete(Self::delete).get(Self::read).post(Self::create_sons),
+            )
     }
 }
