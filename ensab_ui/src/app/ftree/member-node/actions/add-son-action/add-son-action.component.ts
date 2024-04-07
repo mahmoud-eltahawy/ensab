@@ -25,16 +25,16 @@ function extract_values(name : FCS,is_male : FCS): [string[],boolean] | undefine
 export class AddSonActionComponent {
   name = new FormControl('')
   is_male = new FormControl('1');
-  member = input<Member>()
+  member = input.required<Member>()
 
   on_submit() {
     const values = extract_values(this.name,this.is_male)
     if(!values){ return;}
     const [names,is_male] = values;
     for (const name of names) {
-      this.member()?.add_son(name,is_male)
+      this.member().add_son(name,is_male)
     }
-    this.member()?.actions.add_son_done()
+    this.member().actions.add_son_done()
   }
 
   is_only = signal(true)

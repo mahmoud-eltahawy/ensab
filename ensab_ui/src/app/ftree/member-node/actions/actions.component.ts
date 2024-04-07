@@ -12,5 +12,5 @@ import Member from '../member';
   templateUrl: './actions.component.html',
 })
 export class ActionsComponent {
-  member = input<Member>()
+  member = input.required<Member>()
 }

@@ -1,12 +1,12 @@
 <action 
-  [cond]="member()?.actions?.rename_son()"
+  [cond]="member().actions.rename_son()"
   (submit)="on_submit()"
-  (cancel)="member()?.actions?.rename_son_done()"
+  (cancel)="member().actions.rename_son_done()"
 >
   <input
       [formControl]="name_control"
       class="col-span-4 placeholder:text-center placeholder-gray-400 bg-gray-800 border-gray-500 hover:border-gray-800 text-center border-2 mx-5 p-2 text-4xl rounded-lg w-96"
-      [placeholder]="member()?.name()"
+      [placeholder]="member().name()"
       required
   />
 </action>

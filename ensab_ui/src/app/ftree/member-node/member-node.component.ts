@@ -11,6 +11,6 @@ import { ActionsComponent } from './actions/actions.component';
   templateUrl: './member-node.component.html',
 })
 export class MemberNodeComponent {
-  member = model<Member>();
+  member = model.required<Member>();
   actions = computed(() => this.member()?.actions)
 }

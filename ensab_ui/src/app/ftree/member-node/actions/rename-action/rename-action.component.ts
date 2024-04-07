@@ -10,7 +10,7 @@ import { ActionComponent } from '../action/action.component';
   templateUrl: './rename-action.component.html',
 })
 export class RenameActionComponent {
-  member = input<Member>()
+  member = input.required<Member>()
   name_control = new FormControl('')
 
   on_submit() {
@@ -18,8 +18,8 @@ export class RenameActionComponent {
     if (!name) {
       return;
     }
-    this.member()?.name.set(name)
-    this.member()?.actions?.rename_son_done()
-    Member.updates.record_update(this.member()!.sonless_raw())
+    this.member().name.set(name)
+    this.member().actions.rename_son_done()
+    Member.updates.record_update(this.member().sonless_raw())
   }
 }

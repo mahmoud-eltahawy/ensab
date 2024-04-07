@@ -1,7 +1,7 @@
 <action 
-  [cond]="member()?.actions?.remove_son()"
+  [cond]="member().actions.remove_son()"
   (submit)="on_submit()" 
-  (cancel)="member()?.actions?.remove_son_done()"
+  (cancel)="member().actions.remove_son_done()"
 >
   <div class="border-2 col-span-4 flex flex-wrap rounded-lg bg-gray-950 border-gray-500 hover:border-gray-950">
     @for(son of get_restored(); track son.id) {

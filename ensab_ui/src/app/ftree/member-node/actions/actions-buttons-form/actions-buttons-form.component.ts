@@ -8,5 +8,5 @@ import Member from '../../member';
   templateUrl: './actions-buttons-form.component.html',
 })
 export class ActionsButtonsFormComponent {
-  member = input<Member>();
+  member = input.required<Member>();
 }
