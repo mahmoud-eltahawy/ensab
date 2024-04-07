@@ -28,10 +28,7 @@ pub(crate) struct SonlessRawMember {
     pub is_male: bool,
 }
 
-use async_recursion::async_recursion;
-
 impl RawMember {
-    #[async_recursion]
     async fn db_create(
         self,
         transaction: &mut Transaction<'_, Postgres>,
@@ -53,7 +50,7 @@ impl RawMember {
         .execute(&mut **transaction)
         .await?;
         for son in self.sons {
-            son.db_create(transaction, Some(self.id)).await?;
+            Box::pin(son.db_create(transaction, Some(self.id))).await?;
         }
 
         Ok(())
@@ -126,7 +123,6 @@ impl RawMember {
         Ok(StatusCode::OK)
     }
 
-    #[async_recursion]
     async fn db_read(pool: &Pool<Postgres>, id: Uuid) -> Result<Self, Box<sqlx::Error>> {
         let sons_ids = query!("select id from member where parent_id = $1", id)
             .fetch_all(pool)
@@ -136,7 +132,7 @@ impl RawMember {
             .collect::<Vec<_>>();
         let mut sons = Vec::new();
         for son_id in sons_ids {
-            let son = Self::db_read(pool, son_id).await?;
+            let son = Box::pin(Self::db_read(pool, son_id)).await?;
             sons.push(son);
         }
         let member_record = query!("select name,is_male from member where id = $1", id)

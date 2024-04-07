@@ -29,7 +29,6 @@ export class AddSonActionComponent {
     for(const son of sons) {
       Member.updates.record_create(this.member()!.id,son)
     }
-    console.log(Member.updates.created())
     this.member()?.actions.add_son_done()
   }
 
