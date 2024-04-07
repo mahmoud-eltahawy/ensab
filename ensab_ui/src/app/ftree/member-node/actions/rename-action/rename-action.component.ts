@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import Member from '../../member';
@@ -7,7 +6,7 @@ import { ActionComponent } from '../action/action.component';
 @Component({
   selector: 'rename',
   standalone: true,
-  imports: [NgIf,ReactiveFormsModule,ActionComponent],
+  imports: [ReactiveFormsModule,ActionComponent],
   templateUrl: './rename-action.component.html',
 })
 export class RenameActionComponent {

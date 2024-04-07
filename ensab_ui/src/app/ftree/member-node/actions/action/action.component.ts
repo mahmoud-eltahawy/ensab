@@ -1,10 +1,9 @@
-import { NgIf } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 
 @Component({
   selector: 'action',
   standalone: true,
-  imports: [NgIf],
+  imports: [],
   templateUrl: './action.component.html',
 })
 export class ActionComponent {

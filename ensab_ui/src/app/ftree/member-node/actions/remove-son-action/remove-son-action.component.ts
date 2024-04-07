@@ -1,4 +1,3 @@
-import { NgFor, NgIf } from '@angular/common';
 import { Component, computed, input, signal } from '@angular/core';
 import Member from '../../member';
 import { ActionComponent } from '../action/action.component';
@@ -6,7 +5,7 @@ import { ActionComponent } from '../action/action.component';
 @Component({
   selector: 'remove-son',
   standalone: true,
-  imports: [NgIf,NgFor,ActionComponent],
+  imports: [ActionComponent],
   templateUrl: './remove-son-action.component.html',
 })
 export class RemoveSonActionComponent {

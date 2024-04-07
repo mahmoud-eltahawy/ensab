@@ -1,4 +1,3 @@
-import { NgIf } from '@angular/common';
 import { Component, input, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import Member from '../../member';
@@ -20,7 +19,7 @@ function extract_values(name : FCS,is_male : FCS): [string[],boolean] | undefine
 @Component({
   selector: 'add-son',
   standalone: true,
-  imports: [NgIf,ReactiveFormsModule,ActionComponent],
+  imports: [ReactiveFormsModule,ActionComponent],
   templateUrl: './add-son-action.component.html',
 })
 export class AddSonActionComponent {

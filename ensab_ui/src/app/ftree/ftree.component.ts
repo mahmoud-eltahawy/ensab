@@ -3,12 +3,11 @@ import { ActivatedRoute } from '@angular/router';
 import Member from './member-node/member';
 import { MemberNodeComponent } from '../ftree/member-node/member-node.component';
 import { HttpClientModule,HttpClient } from '@angular/common/http';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-ftree',
   standalone: true,
-  imports: [MemberNodeComponent,HttpClientModule,NgIf],
+  imports: [MemberNodeComponent,HttpClientModule],
   templateUrl: './ftree.component.html',
 })
 export class FtreeComponent implements OnInit{
