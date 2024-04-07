@@ -71,12 +71,12 @@ class Updates {
       });
     }
 
-    record_delete(id : string):boolean {
+    record_delete(id : string) {
       if (this.deleted().has(id)) {
-        return false;
+        this.deleted.update(xs => new Set([...xs].filter(x => x !== id)))
+      } else {
+        this.deleted.update(xs => new Set([...xs,id]))
       }
-      this.deleted.update(xs => new Set([...xs,id]))
-      return true
     }
 }
 
@@ -154,6 +154,7 @@ export default class Member {
 
     add_son(name: string, is_male: boolean) {
         const person_from_name = Member.create_from_name(name);
+        Member.updates.record_create(this.id,person_from_name.raw())
         this.sons.update(sons => {
             const son_with_similar_name = sons.find(x => x.name() == person_from_name.name());
             if (son_with_similar_name) {
@@ -170,6 +171,10 @@ export default class Member {
               return [...sons,person_from_name]
             }
         });
+    }
+
+    remove_son_toggle(id : string) {
+      Member.updates.record_delete(id);
     }
 }
 

@@ -20,11 +20,12 @@ export class RemoveSonActionComponent {
 
   remove(id : string) {
     this.removed.update(xs => [...xs,id])
-    Member.updates.record_delete(id);
+    this.member()?.remove_son_toggle(id);
   }
 
   restore(id : string) {
     this.removed.update(xs => xs.filter(x => x !== id))
+    this.member()?.remove_son_toggle(id);
   }
 
   get_removed = computed(() => this.member()?.sons().filter(x => this.removed().includes(x.id)) ?? [])
