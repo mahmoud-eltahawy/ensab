@@ -25,6 +25,11 @@ export class AddSonActionComponent {
       this.member()?.add_son(name,is_male)
     }
     this.name.setValue("")
+    const sons = this.member()!.sons().map(x => x.raw())
+    for(const son of sons) {
+      Member.updates.record_create(this.member()!.id,son)
+    }
+    console.log(Member.updates.created())
     this.member()?.actions.add_son_done()
   }
 

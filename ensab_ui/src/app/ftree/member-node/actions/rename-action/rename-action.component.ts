@@ -21,6 +21,6 @@ export class RenameActionComponent {
     }
     this.member()?.name.set(name)
     this.member()?.actions?.rename_son_done()
-    Member.record_member_update(this.member()!.sonless_raw())
+    Member.updates.record_update(this.member()!.sonless_raw())
   }
 }

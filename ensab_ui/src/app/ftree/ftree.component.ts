@@ -16,7 +16,7 @@ export class FtreeComponent implements OnInit{
   create = true;//true means to create. false to update 
 
   show_save_button(): boolean {
-    return this.create || Member.updates().length > 0 
+    return this.create || Member.updates.is_dirty()
   }
 
   constructor(
@@ -29,9 +29,8 @@ export class FtreeComponent implements OnInit{
     console.log("clicked")
     if (this.create) {
       this.http.post("http://localhost:8080/member",member).subscribe()
-    } else if(Member.updates().length > 0) {
-      this.http.put("http://localhost:8080/member",Member.get_and_clear_updates()).subscribe()
-      console.log("puted")
+    } else if(Member.updates.is_dirty()) {
+      Member.updates.commit(this.http)
     }
   }
 

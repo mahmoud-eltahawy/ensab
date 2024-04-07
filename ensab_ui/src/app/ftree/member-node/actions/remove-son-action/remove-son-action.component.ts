@@ -20,6 +20,7 @@ export class RemoveSonActionComponent {
 
   remove(id : string) {
     this.removed.update(xs => [...xs,id])
+    Member.updates.record_delete(id);
   }
 
   restore(id : string) {

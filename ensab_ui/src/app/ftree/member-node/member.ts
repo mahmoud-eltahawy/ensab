@@ -1,3 +1,4 @@
+import { HttpClient } from "@angular/common/http";
 import { signal, WritableSignal } from "@angular/core"
 
 type RawMember = {
@@ -13,10 +14,76 @@ type SonlessRawMember = {
   is_male : boolean,
 }
 
+class Updates {
+    created : WritableSignal<Map<string,RawMember[]>> 
+    updates : WritableSignal<SonlessRawMember[]> 
+    deleted : WritableSignal<Set<string>> 
+
+    constructor() {
+      this.created = signal(new Map())
+      this.updates = signal([])
+      this.deleted = signal(new Set())
+    }
+
+    private clear() {
+      this.created.set(new Map())
+      this.updates.set([])
+      this.deleted.set(new Set())
+    }
+
+    is_dirty(): boolean {
+      return this.created().size !== 0 || this.updates().length !== 0 || this.deleted().size !== 0 
+    }
+
+    commit(http : HttpClient) {
+      for (const [parent_id,sons] of this.created()) {
+        http.post(`http://localhost:8080/member/${parent_id}`,sons).subscribe()
+      }
+      http.put("http://localhost:8080/member",this.updates()).subscribe()
+      for (const id of this.deleted()) {
+        http.delete(`http://localhost:8080/member/${id}`).subscribe()
+      }
+      this.clear()
+    }
+
+    record_update(member : SonlessRawMember):void {
+      const old_member = this.updates().find(x => x.id === member.id);
+      if(old_member) {
+        old_member.name = member.name; 
+        old_member.is_male = member.is_male;
+      } else {
+        this.updates.update(xs => [...xs,member])
+      }
+      // TODO : check if the fields are matching original member and if so delete the update
+    }
+
+    record_create(parent_id : string,member : RawMember):void {
+      this.created.update(xs => {
+        const old_parent_sons = xs.get(parent_id)
+        if (old_parent_sons) {
+          const new_sons = [...old_parent_sons,member];
+          const arr =  Array.from(xs.entries());
+          return new Map([...arr,[parent_id,new_sons]])
+        } else {
+          const arr =  Array.from(xs.entries());
+          return new Map([...arr,[parent_id,[member]]])
+        }
+      });
+    }
+
+    record_delete(id : string):boolean {
+      if (this.deleted().has(id)) {
+        return false;
+      }
+      this.deleted.update(xs => new Set([...xs,id]))
+      return true
+    }
+}
+
 export default class Member {
     private static instance : Member;
 
-    static updates : WritableSignal<SonlessRawMember[]> = signal([]); 
+    static updates = new Updates(); 
     actions : ActionsGroup;  
     id : string;
     name: WritableSignal<string>;
@@ -33,24 +100,6 @@ export default class Member {
       } else {
         this.sons = signal(sons.map(x => new Member(x.name,x.id,x.is_male,x.sons)))
       }
-    }
-
-    static record_member_update(member : SonlessRawMember) {
-      const old_member = Member.updates().find(x => x.id === member.id);
-      if(old_member) {
-        old_member.name = member.name; 
-        old_member.is_male = member.is_male;
-      } else {
-        Member.updates.update(xs => [...xs,member])
-      }
-      // TODO : check if the fields are matching original member and if so delete the update
-      console.log(Member.updates())
-    }
-
-    static get_and_clear_updates(){
-      const updates =  Member.updates();
-      Member.updates.set([])
-      return updates;
     }
 
     static getInstance(name : string | undefined = undefined): Member {
