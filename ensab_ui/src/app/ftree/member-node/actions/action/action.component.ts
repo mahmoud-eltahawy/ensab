@@ -1,21 +1,21 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output } from "@angular/core";
 
 @Component({
-  selector: 'action',
+  selector: "action",
   standalone: true,
   imports: [],
-  templateUrl: './action.component.html',
+  templateUrl: "./action.component.html",
 })
 export class ActionComponent {
-  cond = input.required<boolean>()
-  submit = output()
-  cancel = output()
+  cond = input.required<boolean>();
+  submit = output();
+  cancel = output();
 
   on_submit() {
-    this.submit.emit()
+    this.submit.emit();
   }
 
   on_cancel() {
-    this.cancel.emit()
+    this.cancel.emit();
   }
 }

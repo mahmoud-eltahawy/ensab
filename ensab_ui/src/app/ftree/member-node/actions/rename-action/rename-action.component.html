@@ -9,4 +9,12 @@
       [placeholder]="member().name()"
       required
   />
+  <select 
+    [formControl]="is_male"
+    class=" col-span-4 bg-gray-800 border-gray-500 hover:border-gray-800 text-center border-2 mx-5 text-4xl rounded-lg w-56"
+  >
+    <option value="1" class="text-center p-5 text-4xl">ذكر</option>
+    <option value="" class="text-center p-5 text-4xl">انثي</option>
+  </select>
+
 </action>

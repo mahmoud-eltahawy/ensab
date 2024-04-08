@@ -1,11 +1,10 @@
-import { Component } from '@angular/core';
+import { Component } from "@angular/core";
 
 @Component({
-  selector: 'app-home',
+  selector: "app-home",
   standalone: true,
   imports: [],
-  templateUrl: './home.component.html',
+  templateUrl: "./home.component.html",
 })
 export class HomeComponent {
-
 }

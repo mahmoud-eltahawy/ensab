@@ -1,11 +1,11 @@
-import { Component, input } from '@angular/core';
-import Member from '../../member';
+import { Component, input } from "@angular/core";
+import Member from "../../member";
 
 @Component({
-  selector: 'actions-buttons',
+  selector: "actions-buttons",
   standalone: true,
   imports: [],
-  templateUrl: './actions-buttons-form.component.html',
+  templateUrl: "./actions-buttons-form.component.html",
 })
 export class ActionsButtonsFormComponent {
   member = input.required<Member>();
