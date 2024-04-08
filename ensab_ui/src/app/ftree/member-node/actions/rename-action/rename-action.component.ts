@@ -16,7 +16,7 @@ export class RenameActionComponent implements OnInit {
   is_male = new FormControl("1");
 
   ngOnInit(): void {
-    this.is_male.setValue(this.member().is_male ? "1" : "");
+    this.is_male.setValue(this.member().is_male() ? "1" : "");
   }
 
   on_submit() {
@@ -24,7 +24,7 @@ export class RenameActionComponent implements OnInit {
     if (!values) return;
     const [name, is_male] = values;
     this.member().name.set(name[0]);
-    this.member().is_male = is_male;
+    this.member().is_male.set(is_male);
     this.member().redrawUpdate();
     Member.updates.record_update(this.member().sonless_raw());
   }

@@ -90,7 +90,7 @@ export default class Member {
   static updates = new Updates();
   id: string;
   name: WritableSignal<string>;
-  is_male: boolean;
+  is_male: WritableSignal<boolean>;
   sons: WritableSignal<Member[]>;
 
   private constructor(
@@ -101,7 +101,7 @@ export default class Member {
   ) {
     this.id = id;
     this.name = signal(name);
-    this.is_male = is_male;
+    this.is_male = signal(is_male);
     if (sons.length === 0) {
       this.sons = signal([]);
     } else {
@@ -177,7 +177,7 @@ export default class Member {
     const result: RawMember = {
       id: this.id,
       name: this.name(),
-      is_male: this.is_male,
+      is_male: this.is_male(),
       sons: this.sons().map((x) => x.raw()),
     } as const;
     return result;
@@ -186,7 +186,7 @@ export default class Member {
     const result: SonlessRawMember = {
       id: this.id,
       name: this.name(),
-      is_male: this.is_male,
+      is_male: this.is_male(),
     } as const;
     return result;
   }
@@ -218,11 +218,11 @@ export default class Member {
     const same_person = sons.find(x => x.name() === person_from_name.name()) 
     if(same_person){
       for(const person of person_from_name.sons()) {
-        same_person.add_son(person.name(),person.is_male)
+        same_person.add_son(person.name(),person.is_male())
         Member.updates.record_create(same_person.id, person.raw());
       } 
     } else {
-      person_from_name.is_male = is_male;
+      person_from_name.is_male.set(is_male);
       this.sons.update(xs => [...xs,person_from_name])
       Member.updates.record_create(this.id, person_from_name.raw());
     }
