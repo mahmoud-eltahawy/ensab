@@ -1,10 +1,12 @@
 <section class="grid justify-items-center overflow-auto">
   <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
   <member-node [member]="member!" />
-  @if(show_save_button()){
-  <button 
-    class="text-center m-5 text-2xl" 
-    (click)="createUpdate()"
-  >حفظ</button>
-  }
 </section>
+<div class="grid justify-items-center">
+@if(show_save_button()){
+<button 
+  class="text-center m-5 text-2xl border-2 hover:border-dashed p-5 rounded-lg" 
+  (click)="createUpdate()"
+>حفظ</button>
+}
+</div>

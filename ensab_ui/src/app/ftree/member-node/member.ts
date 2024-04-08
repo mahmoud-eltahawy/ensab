@@ -202,7 +202,7 @@ export default class Member {
   }
 
   static create_from_name(name: string): Member {
-    const names = name.split(" ");
+    const names = name.split("->");
     const namei = names.pop();
     if (!namei) {
       return new Member("");
