@@ -1,7 +1,7 @@
 <action 
-  [cond]="member().actions.rename_son()"
+  [cond]="member().canUpdate()"
   (submit)="on_submit()"
-  (cancel)="member().actions.rename_son_done()"
+  (cancel)="member().redrawUpdate()"
 >
   <input
       [formControl]="name_control"

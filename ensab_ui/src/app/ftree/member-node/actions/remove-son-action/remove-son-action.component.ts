@@ -14,7 +14,7 @@ export class RemoveSonActionComponent {
 
   on_submit() {
     this.member().sons.update(() => this.get_restored());
-    this.member().actions.remove_son_done();
+    this.member().redrawRemove();
   }
 
   remove(id: string) {

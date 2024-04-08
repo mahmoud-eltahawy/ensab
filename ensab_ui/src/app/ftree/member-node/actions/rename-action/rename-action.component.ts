@@ -25,7 +25,7 @@ export class RenameActionComponent implements OnInit {
     const [name, is_male] = values;
     this.member().name.set(name[0]);
     this.member().is_male = is_male;
-    this.member().actions.rename_son_done();
+    this.member().redrawUpdate();
     Member.updates.record_update(this.member().sonless_raw());
   }
 }

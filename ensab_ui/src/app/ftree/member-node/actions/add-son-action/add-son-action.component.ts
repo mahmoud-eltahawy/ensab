@@ -22,7 +22,7 @@ export class AddSonActionComponent {
     for (const name of names) {
       this.member().add_son(name, is_male);
     }
-    this.member().actions.add_son_done();
+    this.member().redrawAdd();
   }
 
   is_only = signal(true);

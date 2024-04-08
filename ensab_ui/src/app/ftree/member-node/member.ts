@@ -88,7 +88,6 @@ export default class Member {
   private static instance: Member;
 
   static updates = new Updates();
-  actions: ActionsGroup;
   id: string;
   name: WritableSignal<string>;
   is_male: boolean;
@@ -103,7 +102,6 @@ export default class Member {
     this.id = id;
     this.name = signal(name);
     this.is_male = is_male;
-    this.actions = new ActionsGroup();
     if (sons.length === 0) {
       this.sons = signal([]);
     } else {
@@ -111,6 +109,57 @@ export default class Member {
         sons.map((x) => new Member(x.name, x.id, x.is_male, x.sons)),
       );
     }
+  }
+
+  action() {
+    Waitlists.actions.take(this.id)
+  }
+
+  canAction():boolean {
+    return Waitlists.actions.can(this.id)
+  }
+
+  redrawAction(){
+    Waitlists.actions.redraw(this.id)
+  }
+
+  removeSon() {
+    Waitlists.remove.take(this.id)
+    this.redrawAction()
+  }
+
+  canRemove():boolean {
+    return Waitlists.remove.can(this.id)
+  }
+
+  redrawRemove() {
+    Waitlists.remove.redraw(this.id)
+  }
+
+  update() {
+    Waitlists.updates.take(this.id)
+    this.redrawAction()
+  }
+
+  canUpdate():boolean {
+    return Waitlists.updates.can(this.id)
+  }
+
+  redrawUpdate() {
+    Waitlists.updates.redraw(this.id)
+  }
+
+  addSon() {
+    Waitlists.adding.take(this.id)
+    this.redrawAction()
+  }
+
+  canAdd():boolean {
+    return Waitlists.adding.can(this.id)
+  }
+
+  redrawAdd() {
+    Waitlists.adding.redraw(this.id)
   }
 
   static getInstance(name: string | undefined = undefined): Member {
@@ -191,47 +240,29 @@ export default class Member {
   }
 }
 
-class ActionsGroup {
-  take_action: WritableSignal<boolean>;
-  add_son: WritableSignal<boolean>;
-  remove_son: WritableSignal<boolean>;
-  rename_son: WritableSignal<boolean>;
-
-  constructor() {
-    this.take_action = signal(false);
-    this.add_son = signal(false);
-    this.remove_son = signal(false);
-    this.rename_son = signal(false);
+class Waitlist {
+  private list : WritableSignal<string[]> = signal([])
+  take(id : string) {
+    this.list.update(xs => [...xs,id]);
   }
 
-  toggle_action() {
-    this.take_action.update((x) => !x);
+  redraw(id : string) {
+    this.list.update(xs => xs.filter(x => x !== id));
   }
 
-  add_son_action() {
-    this.add_son.set(true);
-    this.toggle_action();
+  can(id : string):boolean {
+    const list = this.list()
+    if(list.at(list.length -1) === id) {
+      return true
+    } else {
+      return false
+    }
   }
+}
 
-  add_son_done() {
-    this.add_son.set(false);
-  }
-
-  remove_son_action() {
-    this.remove_son.set(true);
-    this.toggle_action();
-  }
-
-  remove_son_done() {
-    this.remove_son.set(false);
-  }
-
-  rename_son_action() {
-    this.rename_son.set(true);
-    this.toggle_action();
-  }
-
-  rename_son_done() {
-    this.rename_son.set(false);
-  }
+class Waitlists {
+  static actions = new Waitlist();
+  static updates = new Waitlist();
+  static adding = new Waitlist();
+  static remove = new Waitlist();
 }
