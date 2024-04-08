@@ -214,25 +214,18 @@ export default class Member {
 
   add_son(name: string, is_male: boolean) {
     const person_from_name = Member.create_from_name(name);
-    Member.updates.record_create(this.id, person_from_name.raw());
-    this.sons.update((sons) => {
-      const son_with_similar_name = sons.find((x) =>
-        x.name() == person_from_name.name()
-      );
-      if (son_with_similar_name) {
-        const similar_sons = son_with_similar_name.sons();
-        son_with_similar_name.sons.update((sons) => {
-          for (const person of similar_sons) {
-            person.is_male = is_male;
-          }
-          return [...sons, ...similar_sons];
-        });
-        return [];
-      } else {
-        person_from_name.is_male = is_male;
-        return [...sons, person_from_name];
-      }
-    });
+    const sons = this.sons()
+    const same_person = sons.find(x => x.name() === person_from_name.name()) 
+    if(same_person){
+      for(const person of person_from_name.sons()) {
+        same_person.add_son(person.name(),person.is_male)
+        Member.updates.record_create(same_person.id, person.raw());
+      } 
+    } else {
+      person_from_name.is_male = is_male;
+      this.sons.update(xs => [...xs,person_from_name])
+      Member.updates.record_create(this.id, person_from_name.raw());
+    }
   }
 
   remove_son_toggle(id: string) {

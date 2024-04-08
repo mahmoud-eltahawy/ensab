@@ -25,7 +25,6 @@ export class FtreeComponent implements OnInit {
 
   createUpdate() {
     const member = Member.getInstance().raw();
-    console.log("clicked");
     if (this.create) {
       this.http.post("http://localhost:8080/member", member).subscribe();
     } else if (Member.updates.is_dirty()) {
