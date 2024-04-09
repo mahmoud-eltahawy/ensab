@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use axum::{
     http::{
         header::{AUTHORIZATION, CONTENT_TYPE},
@@ -7,9 +5,8 @@ use axum::{
     },
     Router,
 };
-use member::RawMember;
 
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use shared::{get_postgres_pool, Pool, Postgres};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 
@@ -27,22 +24,14 @@ async fn main() -> anyhow::Result<()> {
     let binded_at = format!("{}:{}", host, port);
 
     let db_connection_str = std::env::var("DATABASE_URL")?;
-
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(3))
-        .connect(&db_connection_str)
-        .await
-        .expect("can't connect to database");
-
-    sqlx::migrate!("./migrations").run(&pool).await?;
+    let pool = get_postgres_pool(&db_connection_str).await?;
 
     println!("binded at {}", binded_at);
 
     let state = AppState { pool };
 
     let app = Router::new()
-        .nest("/member", RawMember::routes())
+        .nest("/member", member::routes())
         .layer(
             CorsLayer::new()
                 .allow_origin("http://localhost:4200".parse::<HeaderValue>()?)
