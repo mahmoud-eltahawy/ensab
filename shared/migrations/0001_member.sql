@@ -5,6 +5,15 @@ CREATE TABLE IF NOT EXISTS member (
   name VARCHAR(30) NOT NULL,
   is_male BOOLEAN NOT NULL,
   insert_date TIMESTAMP NOT NULL,
-  parent_id Uuid,
-  FOREIGN KEY (parent_id) REFERENCES member(id) ON DELETE CASCADE
+  parent_id UUID,
+  UNIQUE(parent_id,name),
+  FOREIGN KEY(parent_id) REFERENCES member(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY NOT NULL,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(300) NOT NULL,
+  member_id UUID,
+  FOREIGN KEY(member_id) REFERENCES member(id)
 );
