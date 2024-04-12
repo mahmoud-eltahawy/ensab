@@ -83,7 +83,7 @@ pub async fn read(pool: &Pool<Postgres>, id: Uuid) -> anyhow::Result<RawMember> 
         .map(|x| x.id)
         .collect::<Vec<_>>();
     let mut sons = Vec::new();
-    for son_id in sons_ids {
+    for son_id in sons_ids.into_iter().filter(|x| !x.is_nil()) {
         let son = Box::pin(read(pool, son_id)).await?;
         sons.push(son);
     }
