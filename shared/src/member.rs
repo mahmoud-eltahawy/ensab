@@ -76,14 +76,17 @@ pub async fn delete(pool: Pool<Postgres>, id: Uuid) -> anyhow::Result<()> {
 }
 
 pub async fn read(pool: &Pool<Postgres>, id: Uuid) -> anyhow::Result<RawMember> {
-    let sons_ids = query!("select id from member where parent_id = $1", id)
-        .fetch_all(pool)
-        .await?
-        .into_iter()
-        .map(|x| x.id)
-        .collect::<Vec<_>>();
+    let sons_ids = query!(
+        "select id from member where parent_id = $1 and id <> uuid_nil()",
+        id
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|x| x.id)
+    .collect::<Vec<_>>();
     let mut sons = Vec::new();
-    for son_id in sons_ids.into_iter().filter(|x| !x.is_nil()) {
+    for son_id in sons_ids {
         let son = Box::pin(read(pool, son_id)).await?;
         sons.push(son);
     }
