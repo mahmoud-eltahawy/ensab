@@ -22,12 +22,16 @@ tracing = { version = "0.1", optional = true }
 http = "1"
 uuid = { version = "1.8.0", features = ["serde","v4"] }
 serde = { version = "1.0.197", features = ["derive"] }
+once_cell = "1.19.0"
+contracts = {path = "../api/contracts"}
+db = {path = "../api/db",optional = true}
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
     "dep:axum",
     "dep:tokio",
+    "dep:db",
     "dep:tower",
     "dep:tower-http",
     "dep:leptos_axum",

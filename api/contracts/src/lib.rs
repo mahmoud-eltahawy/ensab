@@ -2,7 +2,7 @@ pub mod member {
     use serde::{Deserialize, Serialize};
     use uuid::Uuid;
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Clone, Default, PartialEq, Eq, Debug)]
     pub struct RawMember {
         pub id: Uuid,
         pub name: String,
@@ -10,7 +10,7 @@ pub mod member {
         pub sons: Vec<RawMember>,
     }
 
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Clone)]
     pub struct SonlessRawMember {
         pub id: Uuid,
         pub name: String,

@@ -1,73 +1,160 @@
-use leptos::{RwSignal, SignalGet, SignalGetUntracked, SignalUpdate};
+use std::collections::{HashMap, HashSet};
+
+use contracts::member::{RawMember, SonlessRawMember};
+use leptos::{RwSignal, SignalGet, SignalSet, SignalUpdate};
+use once_cell::sync::Lazy;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy)]
-pub struct FamilyMember {
+#[derive(Clone, Copy)]
+pub struct Member {
     pub id: Uuid,
     pub name: RwSignal<String>,
-    pub is_male: bool,
-    pub sons: RwSignal<Vec<FamilyMember>>,
+    pub is_male: RwSignal<bool>,
+    pub sons: RwSignal<Vec<Member>>,
 }
 
-impl Default for FamilyMember {
-    fn default() -> Self {
-        FamilyMember {
+#[derive(Clone, Copy)]
+struct Updates {
+    created: RwSignal<HashMap<Uuid, Vec<RawMember>>>,
+    updates: RwSignal<Vec<SonlessRawMember>>,
+    deleted: RwSignal<HashSet<Uuid>>,
+}
+
+static UPDATES: Lazy<Updates> = Lazy::new(|| Updates {
+    created: RwSignal::new(HashMap::new()),
+    updates: RwSignal::new(Vec::new()),
+    deleted: RwSignal::new(HashSet::new()),
+});
+
+impl Updates {
+    fn is_dirty(&self) -> bool {
+        !self.deleted.get().is_empty()
+            || !self.updates.get().is_empty()
+            || !self.created.get().is_empty()
+    }
+
+    fn record_update(&self, member: SonlessRawMember) {
+        let old_member = self.updates.get().into_iter().find(|x| x.id == member.id);
+        // TODO : check if the fields are matching original member and if so cancel the update
+        match old_member {
+            Some(mut old_member) => {
+                old_member.name = member.name;
+                old_member.is_male = member.is_male;
+                self.updates.update(|xs| {
+                    xs.retain(|x| x.id != old_member.id);
+                    xs.push(old_member);
+                })
+            }
+            None => {
+                self.updates.update(|xs| xs.push(member));
+            }
+        };
+    }
+
+    fn record_create(&self, parent_id: Uuid, member: RawMember) {
+        let old_parent_sons = self.created.get();
+        let old_parent_sons = old_parent_sons.get(&parent_id);
+        match old_parent_sons {
+            Some(old_parent_sons) => {
+                let mut siblings = old_parent_sons
+                    .into_iter()
+                    .filter(|x| x.name != member.name)
+                    .cloned()
+                    .collect::<Vec<_>>();
+                self.created.update(|xs| {
+                    siblings.push(member);
+                    xs.insert(parent_id, siblings);
+                });
+            }
+            None => self.created.update(|xs| {
+                xs.insert(parent_id, vec![member]);
+            }),
+        }
+    }
+
+    fn record_delete(&self, id: Uuid) {
+        if self.deleted.get().contains(&id) {
+            self.deleted.update(|xs| xs.retain(|x| *x != id));
+        } else {
+            self.deleted.update(|xs| {
+                xs.insert(id);
+            });
+        }
+    }
+}
+
+impl Member {
+    pub fn new(name: String) -> Self {
+        Self {
             id: Uuid::new_v4(),
-            name: RwSignal::new(String::new()),
-            is_male: true,
+            name: RwSignal::new(name),
+            is_male: RwSignal::new(true),
             sons: RwSignal::new(vec![]),
         }
     }
-}
-
-impl FamilyMember {
-    pub fn new(name: RwSignal<String>) -> Self {
-        Self {
+    pub fn from_raw(
+        RawMember {
+            id,
             name,
-            ..Default::default()
+            is_male,
+            sons,
+        }: RawMember,
+    ) -> Self {
+        println!("{:#?}", sons);
+        Self {
+            id,
+            name: RwSignal::new(name),
+            is_male: RwSignal::new(is_male),
+            sons: RwSignal::new(sons.into_iter().map(|x| Member::from_raw(x)).collect()),
         }
     }
-    pub fn with_sons(&mut self, names: &mut Vec<String>) {
-        let Some(name) = names.pop() else {
-            return;
-        };
-        let mut son = FamilyMember {
-            name: RwSignal::new(name),
-            ..Default::default()
-        };
-        son.with_sons(names);
-        self.sons = RwSignal::new(vec![son]);
+    pub fn raw(self) -> RawMember {
+        RawMember {
+            id: self.id,
+            name: self.name.get(),
+            is_male: self.is_male.get(),
+            sons: self.sons.get().into_iter().map(|x| x.raw()).collect(),
+        }
+    }
+    pub fn sonless_raw(self) -> SonlessRawMember {
+        SonlessRawMember {
+            id: self.id,
+            name: self.name.get(),
+            is_male: self.is_male.get(),
+        }
     }
 
-    pub fn add_son(&self, name: String, is_male: bool) {
-        let person = Self::create_from_name(name);
-        self.sons.update(|sons| {
-            if let Some(son) = sons.iter().find(|x| x.name.get() == person.name.get()) {
-                let persons = person.sons.get_untracked().into_iter().collect::<Vec<_>>();
-                son.sons.update(|sons| {
-                    for person in persons {
-                        sons.push(FamilyMember { is_male, ..person })
-                    }
-                });
-            } else {
-                sons.push(FamilyMember { is_male, ..person });
-            }
-        });
+    fn with_sons(&self, names: &mut Vec<String>) {
+        let name = names.pop();
+        let Some(name) = name else {
+            return;
+        };
+        let son = Member::new(name);
+        son.with_sons(names);
+        self.sons.set(vec![son]);
     }
 
     pub fn create_from_name(name: String) -> Self {
-        let mut names = name
-            .split_whitespace()
-            .map(|x| x.to_string())
-            .collect::<Vec<_>>();
-        let Some(name) = names.pop() else {
-            return Self::default();
-        };
-        let mut person = FamilyMember {
-            name: RwSignal::new(name),
-            ..Default::default()
-        };
+        let mut names = name.split("->").map(|x| x.to_string()).collect::<Vec<_>>();
+        let name = names.pop().unwrap();
+        let person = Member::new(name);
         person.with_sons(&mut names);
         person
+    }
+
+    pub fn add_son(&self, member: Member) {
+        let sons = self.sons.get();
+        let same_person = sons.iter().find(|x| x.name.get() == member.name.get());
+        match same_person {
+            Some(same_person) => {
+                for person in member.sons.get() {
+                    same_person.add_son(person)
+                }
+            }
+            None => {
+                self.sons.update(|xs| xs.push(member));
+                UPDATES.record_create(self.id, member.raw());
+            }
+        }
     }
 }
