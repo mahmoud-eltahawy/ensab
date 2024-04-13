@@ -6,11 +6,12 @@ use axum::{
     Json, Router,
 };
 
+use db::member;
 use uuid::Uuid;
 
 use crate::{results::AppError, AppState};
 
-use db::member::{self, RawMember, SonlessRawMember};
+use contracts::member::{RawMember, SonlessRawMember};
 
 async fn create_fatherless(
     State(state): State<AppState>,

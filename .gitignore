@@ -57,4 +57,5 @@ ensab/ node_modules/
 ensab/test-results/
 ensab/end2end/playwright-report/
 ensab/playwright/.cache/
-shared/target
+contracts/target
+db/target

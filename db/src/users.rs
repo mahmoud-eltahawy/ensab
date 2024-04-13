@@ -1,15 +1,8 @@
 use anyhow::Ok;
-use serde::{Deserialize, Serialize};
+use contracts::users::User;
 use sqlx::{query, query_as, Pool, Postgres};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize)]
-pub struct User {
-    pub id: Uuid,
-    pub username: String,
-    pub password: String,
-    pub member_id: Option<Uuid>,
-}
 pub async fn create(
     User {
         id,
