@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 
-use shared::{get_postgres_pool, Pool, Postgres};
+use db::{get_postgres_pool, Pool, Postgres};
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 

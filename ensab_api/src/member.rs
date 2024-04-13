@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::{results::AppError, AppState};
 
-use shared::member::{self, RawMember, SonlessRawMember};
+use db::member::{self, RawMember, SonlessRawMember};
 
 async fn create_fatherless(
     State(state): State<AppState>,
