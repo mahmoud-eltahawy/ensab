@@ -53,9 +53,9 @@ ensab/pkg
 ensab/**/*.rs.bk
 
 # node e2e test tools and outputs
-ensab/ node_modules/
+ensab/node_modules/
 ensab/test-results/
 ensab/end2end/playwright-report/
 ensab/playwright/.cache/
-contracts/target
-db/target
+
+api/target
