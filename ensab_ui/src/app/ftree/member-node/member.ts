@@ -62,17 +62,21 @@ class Updates {
   }
 
   record_create(parent_id: string, member: RawMember): void {
-    this.created.update((xs) => {
-      const old_parent_sons = xs.get(parent_id);
-      if (old_parent_sons) {
-        const new_sons = [...old_parent_sons, member];
+    const old_parent_sons = this.created().get(parent_id);
+    if (old_parent_sons) {
+      const siblings = old_parent_sons.filter(x => x.name !== member.name)
+      this.created.update(xs => {
+        const new_sons = [...siblings, member];
         const arr = Array.from(xs.entries());
         return new Map([...arr, [parent_id, new_sons]]);
-      } else {
+      })
+    } else {
+      this.created.update(xs => {
         const arr = Array.from(xs.entries());
         return new Map([...arr, [parent_id, [member]]]);
-      }
-    });
+      })
+    }
+    console.log(this.created())
   }
 
   record_delete(id: string) {
@@ -170,7 +174,8 @@ export default class Member {
   }
 
   static getInstanceFromRaw({ id, name, is_male, sons }: RawMember): Member {
-    return new Member(name, id, is_male, sons);
+    Member.instance =  new Member(name, id, is_male, sons);
+    return Member.instance;
   }
 
   raw(): RawMember {
@@ -191,7 +196,7 @@ export default class Member {
     return result;
   }
 
-  with_sons(names: string[]): void {
+  private with_sons(names: string[]): void {
     const name = names.pop();
     if (!name) {
       return;
@@ -212,19 +217,16 @@ export default class Member {
     return person;
   }
 
-  add_son(name: string, is_male: boolean) {
-    const person_from_name = Member.create_from_name(name);
+  add_son(member : Member) {
     const sons = this.sons()
-    const same_person = sons.find(x => x.name() === person_from_name.name()) 
+    const same_person = sons.find(x => x.name() === member.name()) 
     if(same_person){
-      for(const person of person_from_name.sons()) {
-        same_person.add_son(person.name(),person.is_male())
-        Member.updates.record_create(same_person.id, person.raw());
+      for(const person of member.sons()) {
+        same_person.add_son(person)
       } 
     } else {
-      person_from_name.is_male.set(is_male);
-      this.sons.update(xs => [...xs,person_from_name])
-      Member.updates.record_create(this.id, person_from_name.raw());
+      this.sons.update(xs => [...xs,member])
+      Member.updates.record_create(this.id, member.raw());
     }
   }
 

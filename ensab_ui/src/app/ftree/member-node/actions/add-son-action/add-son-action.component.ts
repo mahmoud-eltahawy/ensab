@@ -20,7 +20,9 @@ export class AddSonActionComponent {
     if (!values) return;
     const [names, is_male] = values;
     for (const name of names) {
-      this.member().add_son(name, is_male);
+      const member = Member.create_from_name(name); 
+      member.is_male.set(is_male);
+      this.member().add_son(member);
     }
     this.member().redrawAdd();
   }
