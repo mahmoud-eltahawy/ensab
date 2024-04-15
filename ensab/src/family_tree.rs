@@ -35,13 +35,20 @@ pub fn MemberNode() -> impl IntoView {
             Err(_) => IdName::Name(name.to_string()),
         }
     };
-    match id_or_name() {
+    let V = match id_or_name() {
         IdName::Id(id) => {
             view! {<ServerNode id=id/>}
         }
         IdName::Name(name) => {
             view! {<ClientNode name=name/>}
         }
+    };
+
+    view! {
+        <section class="grid justify-items-center overflow-auto">
+          <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
+          {V.into_view()}
+        </section>
     }
 }
 
@@ -58,9 +65,9 @@ fn ServerNode(id: Uuid) -> impl IntoView {
     };
 
     view! {
-    <Transition>
+    <Suspense>
         <Node member=member()/>
-    </Transition>
+    </Suspense>
     }
 }
 
@@ -89,18 +96,18 @@ fn Node(member: Member) -> impl IntoView {
       >
         {name}
       </button>
+      <Show
+          when=move || !member.sons.get().is_empty()>
+        <div class="flex flex-row overflow-auto border-t-2 rounded-t-lg border-black">
+          <For
+              each=sons.clone()
+              key=move |x| x.id
+              let:son
+          >
+              <Node member=son/>
+          </For>
+        </div>
+      </Show>
     </div>
-    <Show
-        when=move || !member.sons.get().is_empty()>
-      <div class="flex flex-row overflow-auto border-t-2 rounded-t-lg border-black">
-        <For
-            each=sons.clone()
-            key=move |x| x.id
-            let:son
-        >
-            <Node member=son/>
-        </For>
-      </div>
-    </Show>
     }
 }
