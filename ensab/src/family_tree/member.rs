@@ -2,7 +2,6 @@ use std::collections::{HashMap, HashSet};
 
 use contracts::member::{RawMember, SonlessRawMember};
 use leptos::{RwSignal, SignalGet, SignalSet, SignalUpdate};
-use once_cell::sync::Lazy;
 use uuid::Uuid;
 
 #[derive(Clone, Copy, Default)]
@@ -19,12 +18,6 @@ struct Updates {
     updates: RwSignal<Vec<SonlessRawMember>>,
     deleted: RwSignal<HashSet<Uuid>>,
 }
-
-static UPDATES: Lazy<Updates> = Lazy::new(|| Updates {
-    created: RwSignal::new(HashMap::new()),
-    updates: RwSignal::new(Vec::new()),
-    deleted: RwSignal::new(HashSet::new()),
-});
 
 impl Updates {
     fn is_dirty(&self) -> bool {
@@ -152,7 +145,7 @@ impl Member {
             }
             None => {
                 self.sons.update(|xs| xs.push(member));
-                UPDATES.record_create(self.id, member.raw());
+                // UPDATES.record_create(self.id, member.raw());
             }
         }
     }

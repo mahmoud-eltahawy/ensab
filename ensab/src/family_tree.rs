@@ -14,16 +14,6 @@ enum IdName {
     Name(String),
 }
 
-#[server]
-async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
-    use db::{member::read, Pool, Postgres};
-    let pool = expect_context::<Pool<Postgres>>();
-    match read(&pool, id).await {
-        Ok(member) => Ok(member),
-        Err(err) => Err(ServerFnError::ServerError(err.to_string())),
-    }
-}
-
 #[component]
 pub fn MemberNode() -> impl IntoView {
     let params = use_params_map();
@@ -35,25 +25,32 @@ pub fn MemberNode() -> impl IntoView {
             Err(_) => IdName::Name(name.to_string()),
         }
     };
-    let V = match id_or_name() {
+    match id_or_name() {
         IdName::Id(id) => {
-            view! {<ServerNode id=id/>}
+            view! {
+                <ServerNode id=id/>
+            }
         }
         IdName::Name(name) => {
-            view! {<ClientNode name=name/>}
+            view! {
+                <ClientNode name=name/>
+            }
         }
-    };
-
-    view! {
-        <section class="grid justify-items-center overflow-auto">
-          <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
-          {V.into_view()}
-        </section>
     }
 }
 
 #[component]
 fn ServerNode(id: Uuid) -> impl IntoView {
+    #[server]
+    async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
+        use db::{member::read, Pool, Postgres};
+        let pool = expect_context::<Pool<Postgres>>();
+        match read(&pool, id).await {
+            Ok(member) => Ok(member),
+            Err(err) => Err(ServerFnError::ServerError(err.to_string())),
+        }
+    }
+
     let member_resource = Resource::once(move || get_member(id));
     let member = move || {
         member_resource
@@ -65,9 +62,12 @@ fn ServerNode(id: Uuid) -> impl IntoView {
     };
 
     view! {
-    <Suspense>
-        <Node member=member()/>
-    </Suspense>
+    <section class="grid justify-items-center overflow-auto">
+        <h1 class="text-center m-5 text-3xl">تعديل الشجرة</h1>
+        <Suspense>
+            <Node member=member()/>
+        </Suspense>
+    </section>
     }
 }
 
@@ -75,7 +75,10 @@ fn ServerNode(id: Uuid) -> impl IntoView {
 fn ClientNode(name: String) -> impl IntoView {
     let member = Member::new(name);
     view! {
+    <section class="grid justify-items-center overflow-auto">
+        <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
         <Node member=member/>
+    </section>
     }
 }
 

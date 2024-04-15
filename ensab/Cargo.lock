@@ -627,7 +627,6 @@ dependencies = [
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
- "once_cell",
  "serde",
  "thiserror",
  "tokio",
