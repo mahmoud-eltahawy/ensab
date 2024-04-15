@@ -53,31 +53,32 @@ fn ServerNode(id: Uuid) -> impl IntoView {
             .get()
             .map(|x| x.ok())
             .flatten()
-            .map(|x| RwSignal::new(Member::from_raw(x)))
+            .map(|x| Member::from_raw(x))
+            .unwrap_or_default()
     };
 
     view! {
-    <Show when=move || member().is_some() >
-        <Node member=member().unwrap()/>
-    </Show>
+    <Transition>
+        <Node member=member()/>
+    </Transition>
     }
 }
 
 #[component]
 fn ClientNode(name: String) -> impl IntoView {
-    let member = RwSignal::new(Member::new(name));
+    let member = Member::new(name);
     view! {
         <Node member=member/>
     }
 }
 
 #[component]
-fn Node(member: RwSignal<Member>) -> impl IntoView {
-    let name = move || member.get().name.get();
+fn Node(member: Member) -> impl IntoView {
+    let name = move || member.name.get();
     let on_click = move |_| logging::log!("member().action()");
 
     let sons = {
-        let sons = member.get().sons.get();
+        let sons = member.sons.get();
         move || sons.clone()
     };
     view! {
@@ -90,14 +91,14 @@ fn Node(member: RwSignal<Member>) -> impl IntoView {
       </button>
     </div>
     <Show
-        when=move || !member.get().sons.get().is_empty()>
+        when=move || !member.sons.get().is_empty()>
       <div class="flex flex-row overflow-auto border-t-2 rounded-t-lg border-black">
         <For
             each=sons.clone()
             key=move |x| x.id
             let:son
         >
-            <Node member=RwSignal::new(son)/>
+            <Node member=son/>
         </For>
       </div>
     </Show>

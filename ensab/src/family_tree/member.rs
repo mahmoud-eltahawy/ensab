@@ -5,7 +5,7 @@ use leptos::{RwSignal, SignalGet, SignalSet, SignalUpdate};
 use once_cell::sync::Lazy;
 use uuid::Uuid;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Member {
     pub id: Uuid,
     pub name: RwSignal<String>,
@@ -100,7 +100,6 @@ impl Member {
             sons,
         }: RawMember,
     ) -> Self {
-        println!("{:#?}", sons);
         Self {
             id,
             name: RwSignal::new(name),
