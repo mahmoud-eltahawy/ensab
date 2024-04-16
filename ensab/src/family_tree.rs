@@ -13,6 +13,24 @@ enum IdName {
     Name(String),
 }
 
+#[derive(Clone, Copy)]
+struct ActionsWaitlist(RwSignal<Vec<Uuid>>);
+
+impl ActionsWaitlist {
+    fn new() -> Self {
+        ActionsWaitlist(RwSignal::new(Vec::new()))
+    }
+    fn take(&self, id: Uuid) {
+        self.0.update(|xs| xs.push(id));
+    }
+    fn redraw(&self, id: Uuid) {
+        self.0.update(|xs| xs.retain(|x| *x != id));
+    }
+    fn check(&self, id: Uuid) -> bool {
+        self.0.get().last().is_some_and(|x| *x == id)
+    }
+}
+
 #[component]
 pub fn MemberNode() -> impl IntoView {
     let params = use_params_map();
@@ -24,6 +42,9 @@ pub fn MemberNode() -> impl IntoView {
             Err(_) => IdName::Name(name.to_string()),
         }
     };
+
+    provide_context(ActionsWaitlist::new());
+
     match id_or_name() {
         IdName::Id(id) => {
             view! {
@@ -84,16 +105,11 @@ fn ClientNode(name: String) -> impl IntoView {
 #[component]
 fn Node(member: Member) -> impl IntoView {
     provide_context(member);
+    let actions_waitlist = expect_context::<ActionsWaitlist>();
     let on_click = move |_| {
-        member.action.update(|x| {
-            *x = match x {
-                Some(_) => None,
-                None => Some(member::Action::Preview),
-            }
-        })
+        actions_waitlist.take(member.id);
     };
 
-    let sons = move || member.sons.get();
     view! {
     <div class="flex flex-col my-10 flex-nowrap">
       <button
@@ -106,7 +122,7 @@ fn Node(member: Member) -> impl IntoView {
           when=move || !member.sons.get().is_empty()>
         <div class="flex flex-row overflow-auto border-t-2 rounded-t-lg border-black">
           <For
-              each=sons.clone()
+              each=move || member.sons.get()
               key=move |x| x.id
               let:son
           >
@@ -115,7 +131,9 @@ fn Node(member: Member) -> impl IntoView {
         </div>
       </Show>
     </div>
-    <Action/>
+    <Show when=move || actions_waitlist.check(member.id)>
+        <Action/>
+    </Show>
     }
 }
 
@@ -124,30 +142,32 @@ fn Action() -> impl IntoView {
     #[component]
     fn Preview() -> impl IntoView {
         #[component]
-        fn AButton<F>(value: String, click: F) -> impl IntoView
-        where
-            F: Fn() + 'static + Clone + Copy,
-        {
+        fn AButton(value: String, action: member::Action) -> impl IntoView {
+            let member = expect_context::<Member>();
+            let on_click = move |_| {
+                member.action.set(action);
+            };
             view! {
                  <button
-                    on:click=move |_| click()
+                    on:click=on_click
                     class="p-5 w-96 m-2 border-2 border-gray-400 bg-gray-950 hover:border-gray-950 rounded-lg"
                 >{value}</button>
             }
         }
 
         let member = expect_context::<Member>();
+        let actions_waitlist = expect_context::<ActionsWaitlist>();
         view! {
             <div
               class="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-3xl text-pretty text-zinc-300 rounded-lg bg-gray-700 border-gray-400 hover:border-gray-700 grid justify-content-center justify-items-center gap-5 p-5 mx-32 my-10 border-4 z-10"
             >
               <h2 class="text-center">{move || member.name.get()}</h2>
-              <AButton value="اضافة ابن".to_string() click=move || member.action.set(Some(member::Action::Add))/>
-              <AButton value="حذف الابن".to_string() click=move || member.action.set(Some(member::Action::Remove))/>
-              <AButton value="تحديث بيانات".to_string() click=move || member.action.set(Some(member::Action::Update))/>
+              <AButton value="اضافة ابن".to_string() action=member::Action::Add/>
+              <AButton value="حذف الابن".to_string() action=member::Action::Remove/>
+              <AButton value="تحديث بيانات".to_string() action=member::Action::Update/>
               <button
                   class="p-5 w-96 border-2 hover:border-red-950 bg-red-950 border-red-400 rounded-lg"
-                  on:click=move |_| member.action.set(None)
+                  on:click=move |_| actions_waitlist.redraw(member.id)
               >
                   الغاء
               </button>
@@ -160,6 +180,8 @@ fn Action() -> impl IntoView {
         F: Fn() + 'static + Clone + Copy,
     {
         let member = expect_context::<Member>();
+        let actions_waitlist = expect_context::<ActionsWaitlist>();
+
         view! {
         <div
           class="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-3xl text-pretty text-zinc-300 rounded-lg bg-gray-700 border-gray-500 hover:border-gray-700 grid justify-content-center justify-items-center gap-5 p-5 border-4 z-10"
@@ -167,13 +189,13 @@ fn Action() -> impl IntoView {
           {children()}
           <button
               class="bg-green-950 border-green-600 hover:border-green-950 border-2 w-56 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg"
-              on:click=move |_| {submit();member.action.set(None)}
+              on:click=move |_| {submit();actions_waitlist.redraw(member.id)}
           >
               تاكيد
           </button>
           <button
               class="bg-red-950 border-red-600 hover:border-red-950 border-2 w-56 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg"
-              on:click=move |_| member.action.set(None)
+              on:click=move |_| actions_waitlist.redraw(member.id)
           >
               الغاء
           </button>
@@ -321,13 +343,11 @@ fn Action() -> impl IntoView {
     }
 
     let member = expect_context::<Member>();
-    let result = move || {
-        member.action.get().map(|action| match action {
-            member::Action::Preview => view! { <Preview/> },
-            member::Action::Add => view! { <Add/> },
-            member::Action::Remove => view! { <Remove/> },
-            member::Action::Update => view! { <Update/> },
-        })
+    let result = move || match member.action.get() {
+        member::Action::Preview => view! { <Preview/> },
+        member::Action::Add => view! { <Add/> },
+        member::Action::Remove => view! { <Remove/> },
+        member::Action::Update => view! { <Update/> },
     };
     result
 }
