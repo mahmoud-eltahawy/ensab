@@ -1,6 +1,6 @@
 #[cfg(feature = "ssr")]
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use axum::Router;
     use db::get_postgres_pool;
     use ensab::app::*;
@@ -13,14 +13,12 @@ async fn main() {
     // <https://github.com/leptos-rs/start-axum#executing-a-server-on-a-remote-machine-without-the-toolchain>
     // Alternately a file can be specified such as Some("Cargo.toml")
     // The file would need to be included with the executable when moved to deployment
-    let conf = get_configuration(None).await.unwrap();
+    let conf = get_configuration(None).await?;
     let leptos_options = conf.leptos_options;
     let addr = leptos_options.site_addr;
     let routes = generate_route_list(App);
 
-    let pool = get_postgres_pool("postgres://admin:admin@localhost/postgres")
-        .await
-        .unwrap();
+    let pool = get_postgres_pool("postgres://admin:admin@localhost/postgres").await?;
 
     // build our application with a route
     let app = Router::new()
@@ -33,11 +31,10 @@ async fn main() {
         .fallback(file_and_error_handler)
         .with_state(leptos_options);
 
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
     logging::log!("listening on http://{}", &addr);
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
+    axum::serve(listener, app.into_make_service()).await?;
+    Ok(())
 }
 
 #[cfg(not(feature = "ssr"))]

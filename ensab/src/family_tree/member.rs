@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use contracts::member::{RawMember, SonlessRawMember};
-use leptos::{RwSignal, SignalGet, SignalSet, SignalUpdate};
+use leptos::{logging, RwSignal, SignalGet, SignalGetUntracked, SignalSet, SignalUpdate};
 use uuid::Uuid;
 
 #[derive(Clone, Copy, Default)]
@@ -22,21 +22,21 @@ pub struct Member {
     pub action: RwSignal<Action>,
 }
 
-#[derive(Clone, Copy)]
-struct Updates {
+#[derive(Clone, Copy, Default)]
+pub struct Updates {
     created: RwSignal<HashMap<Uuid, Vec<RawMember>>>,
     updates: RwSignal<Vec<SonlessRawMember>>,
     deleted: RwSignal<HashSet<Uuid>>,
 }
 
 impl Updates {
-    fn is_dirty(&self) -> bool {
+    pub fn is_dirty(&self) -> bool {
         !self.deleted.get().is_empty()
             || !self.updates.get().is_empty()
             || !self.created.get().is_empty()
     }
 
-    fn record_update(&self, member: SonlessRawMember) {
+    pub fn record_update(&self, member: SonlessRawMember) {
         let old_member = self.updates.get().into_iter().find(|x| x.id == member.id);
         // TODO : check if the fields are matching original member and if so cancel the update
         match old_member {
@@ -52,9 +52,10 @@ impl Updates {
                 self.updates.update(|xs| xs.push(member));
             }
         };
+        logging::log!("{:#?}", self.updates.get_untracked());
     }
 
-    fn record_create(&self, parent_id: Uuid, member: RawMember) {
+    pub fn record_create(&self, parent_id: Uuid, member: RawMember) {
         let old_parent_sons = self.created.get();
         let old_parent_sons = old_parent_sons.get(&parent_id);
         match old_parent_sons {
@@ -73,16 +74,15 @@ impl Updates {
                 xs.insert(parent_id, vec![member]);
             }),
         }
+        //BUG : sons are not mounted correctly
+        logging::log!("{:#?}", self.created.get_untracked());
     }
 
-    fn record_delete(&self, id: Uuid) {
-        if self.deleted.get().contains(&id) {
-            self.deleted.update(|xs| xs.retain(|x| *x != id));
-        } else {
-            self.deleted.update(|xs| {
-                xs.insert(id);
-            });
-        }
+    pub fn record_delete(&self, id: Uuid) {
+        self.deleted.update(|xs| {
+            xs.insert(id);
+        });
+        logging::log!("{:#?}", self.deleted.get_untracked());
     }
 }
 
@@ -115,16 +115,21 @@ impl Member {
     pub fn raw(self) -> RawMember {
         RawMember {
             id: self.id,
-            name: self.name.get(),
-            is_male: self.is_male.get(),
-            sons: self.sons.get().into_iter().map(|x| x.raw()).collect(),
+            name: self.name.get_untracked(),
+            is_male: self.is_male.get_untracked(),
+            sons: self
+                .sons
+                .get_untracked()
+                .into_iter()
+                .map(|x| x.raw())
+                .collect::<Vec<_>>(),
         }
     }
     pub fn sonless_raw(self) -> SonlessRawMember {
         SonlessRawMember {
             id: self.id,
-            name: self.name.get(),
-            is_male: self.is_male.get(),
+            name: self.name.get_untracked(),
+            is_male: self.is_male.get_untracked(),
         }
     }
 
@@ -147,11 +152,13 @@ impl Member {
     }
 
     pub fn add_son(&self, member: Member) {
-        let sons = self.sons.get();
-        let same_person = sons.iter().find(|x| x.name.get() == member.name.get());
+        let sons = self.sons.get_untracked();
+        let same_person = sons
+            .iter()
+            .find(|x| x.name.get_untracked() == member.name.get_untracked());
         match same_person {
             Some(same_person) => {
-                for person in member.sons.get() {
+                for person in member.sons.get_untracked() {
                     same_person.add_son(person)
                 }
             }
