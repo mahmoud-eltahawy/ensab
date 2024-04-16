@@ -4,12 +4,21 @@ use contracts::member::{RawMember, SonlessRawMember};
 use leptos::{RwSignal, SignalGet, SignalSet, SignalUpdate};
 use uuid::Uuid;
 
+#[derive(Clone)]
+pub enum Action {
+    Preview,
+    Add,
+    Remove,
+    Update,
+}
+
 #[derive(Clone, Copy, Default)]
 pub struct Member {
     pub id: Uuid,
     pub name: RwSignal<String>,
     pub is_male: RwSignal<bool>,
     pub sons: RwSignal<Vec<Member>>,
+    pub action: RwSignal<Option<Action>>,
 }
 
 #[derive(Clone, Copy)]
@@ -82,7 +91,8 @@ impl Member {
             id: Uuid::new_v4(),
             name: RwSignal::new(name),
             is_male: RwSignal::new(true),
-            sons: RwSignal::new(vec![]),
+            sons: RwSignal::default(),
+            action: RwSignal::default(),
         }
     }
     pub fn from_raw(
@@ -98,6 +108,7 @@ impl Member {
             name: RwSignal::new(name),
             is_male: RwSignal::new(is_male),
             sons: RwSignal::new(sons.into_iter().map(|x| Member::from_raw(x)).collect()),
+            action: RwSignal::default(),
         }
     }
     pub fn raw(self) -> RawMember {
