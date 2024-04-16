@@ -137,7 +137,7 @@ impl Member {
         self.sons.set(vec![son]);
     }
 
-    pub fn create_from_name(name: String) -> Self {
+    pub fn create_from_name(name: &str) -> Self {
         let mut names = name.split("->").map(|x| x.to_string()).collect::<Vec<_>>();
         let name = names.pop().unwrap();
         let person = Member::new(name);
