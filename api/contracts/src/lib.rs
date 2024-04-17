@@ -10,7 +10,7 @@ pub mod member {
         pub sons: Vec<RawMember>,
     }
 
-    #[derive(Serialize, Deserialize, Clone, Debug)]
+    #[derive(Serialize, Deserialize, Clone, Debug, Default)]
     pub struct SonlessRawMember {
         pub id: Uuid,
         pub name: String,

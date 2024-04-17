@@ -29,6 +29,37 @@ pub struct Updates {
     deleted: RwSignal<HashSet<Uuid>>,
 }
 
+pub trait Rm<T>
+where
+    T: Sized,
+{
+    fn find_son<'a>(&'a self, id: Uuid) -> Option<&'a T>;
+    fn sonless(self) -> SonlessRawMember;
+}
+
+impl Rm<Self> for RawMember {
+    fn find_son<'a>(&'a self, id: Uuid) -> Option<&'a Self> {
+        if self.id == id {
+            return Some(self);
+        } else {
+            for son in self.sons.iter() {
+                if let Some(son) = son.find_son(id) {
+                    return Some(son);
+                };
+            }
+        }
+        None
+    }
+
+    fn sonless(self) -> SonlessRawMember {
+        SonlessRawMember {
+            id: self.id,
+            name: self.name,
+            is_male: self.is_male,
+        }
+    }
+}
+
 impl Updates {
     pub fn is_dirty(&self) -> bool {
         !self.deleted.get().is_empty()
@@ -36,22 +67,31 @@ impl Updates {
             || !self.created.get().is_empty()
     }
 
-    pub fn record_update(&self, member: SonlessRawMember) {
-        let old_member = self.updates.get().into_iter().find(|x| x.id == member.id);
-        // TODO : check if the fields are matching original member and if so cancel the update
-        match old_member {
-            Some(mut old_member) => {
-                old_member.name = member.name;
-                old_member.is_male = member.is_male;
+    pub fn record_update(&self, new_updates: SonlessRawMember) {
+        let target_member = self
+            .updates
+            .get_untracked()
+            .into_iter()
+            .find(|x| x.id == new_updates.id);
+
+        match target_member {
+            Some(mut target_member) => {
+                target_member.name = new_updates.name;
+                target_member.is_male = new_updates.is_male;
                 self.updates.update(|xs| {
-                    xs.retain(|x| x.id != old_member.id);
-                    xs.push(old_member);
+                    xs.retain(|x| x.id != target_member.id);
+                    xs.push(target_member);
                 })
             }
             None => {
-                self.updates.update(|xs| xs.push(member));
+                self.updates.update(|xs| xs.push(new_updates));
             }
         };
+        logging::log!("{:#?}", self.updates.get_untracked());
+    }
+
+    pub fn remove_update(&self, id: Uuid) {
+        self.updates.update(|xs| xs.retain(|x| x.id != id));
         logging::log!("{:#?}", self.updates.get_untracked());
     }
 
@@ -61,7 +101,7 @@ impl Updates {
         match old_parent_sons {
             Some(old_parent_sons) => {
                 let mut siblings = old_parent_sons
-                    .into_iter()
+                    .iter()
                     .filter(|x| x.name != member.name)
                     .cloned()
                     .collect::<Vec<_>>();
@@ -108,7 +148,7 @@ impl Member {
             id,
             name: RwSignal::new(name),
             is_male: RwSignal::new(is_male),
-            sons: RwSignal::new(sons.into_iter().map(|x| Member::from_raw(x)).collect()),
+            sons: RwSignal::new(sons.into_iter().map(Member::from_raw).collect()),
             action: Default::default(),
         }
     }

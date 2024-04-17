@@ -1,4 +1,8 @@
+use crate::family_tree::{member::Rm, MemberSource, OriginalMember};
+
 use super::member;
+
+use contracts::member::SonlessRawMember;
 use leptos::*;
 
 use uuid::Uuid;
@@ -76,6 +80,13 @@ where
     let member = expect_context::<member::Member>();
     let actions_waitlist = expect_context::<ActionsWaitlist>();
 
+    let ok = move |_| {
+        submit();
+        actions_waitlist.redraw(member.id)
+    };
+
+    let cancel = move |_| actions_waitlist.redraw(member.id);
+
     view! {
     <div
       class="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-3xl text-pretty text-zinc-300 rounded-lg bg-gray-700 border-gray-500 hover:border-gray-700 grid justify-content-center justify-items-center gap-5 p-5 border-4 z-10"
@@ -83,13 +94,13 @@ where
       {children()}
       <button
           class="bg-green-950 border-green-600 hover:border-green-950 border-2 w-56 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg"
-          on:click=move |_| {submit();actions_waitlist.redraw(member.id)}
+          on:click=ok
       >
           تاكيد
       </button>
       <button
           class="bg-red-950 border-red-600 hover:border-red-950 border-2 w-56 h-20 col-span-2 text-2xl p-5 m-5 rounded-lg"
-          on:click=move |_| actions_waitlist.redraw(member.id)
+          on:click=cancel
       >
           الغاء
       </button>
@@ -218,16 +229,52 @@ fn Update() -> impl IntoView {
     let gender_ref = create_node_ref::<html::Select>();
 
     let updates = expect_context::<member::Updates>();
+    let member_source = expect_context::<MemberSource>();
+    let original_member_resource = match member_source {
+        MemberSource::Server => Some(expect_context::<OriginalMember>()),
+        MemberSource::Client => None,
+    };
+
+    let original_member = move || {
+        original_member_resource
+            .and_then(|res| res.get().map(|x| x.ok()))
+            .flatten()
+    };
 
     let submit = move || {
-        let name = name_ref.get().unwrap().value();
-        let gender: bool = gender_ref.get().unwrap().value().parse().unwrap();
+        let name = name_ref.get().unwrap().value().trim().to_string();
+        let is_male: bool = gender_ref.get().unwrap().value().parse().unwrap();
         if name.is_empty() {
             return;
         }
-        member.name.set(name);
-        member.is_male.set(gender);
-        updates.record_update(member.sonless_raw());
+        let new_updates = SonlessRawMember {
+            id: member.id,
+            name: name.clone(),
+            is_male,
+        };
+        match original_member() {
+            Some(original) => {
+                if let Some(same_member) = original.find_son(member.id) {
+                    let original = same_member.clone().sonless();
+                    if (new_updates.name != original.name)
+                        || (new_updates.is_male != original.is_male)
+                    {
+                        updates.record_update(new_updates);
+                        member.name.set(name);
+                        member.is_male.set(is_male);
+                    } else {
+                        updates.remove_update(new_updates.id);
+                        member.name.set(original.name);
+                        member.is_male.set(original.is_male);
+                    }
+                };
+            }
+            None => {
+                updates.record_update(new_updates);
+                member.name.set(name);
+                member.is_male.set(is_male);
+            }
+        }
     };
     view! {
     <ActionDiv submit>
@@ -240,7 +287,7 @@ fn Update() -> impl IntoView {
         class="col-span-4 bg-gray-800 border-gray-500 hover:border-gray-800 text-center border-2 mx-5 text-4xl rounded-lg w-56"
         node_ref=gender_ref
       >
-        <option value="true" class="text-center p-5 text-4xl">ذكر</option>
+        <option value="true" class="text-center p-5 text-4xl" selected>ذكر</option>
         <option value="false" class="text-center p-5 text-4xl">انثي</option>
       </select>
     </ActionDiv>

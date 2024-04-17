@@ -15,6 +15,12 @@ enum IdName {
     Name(String),
 }
 
+#[derive(Clone)]
+pub enum MemberSource {
+    Server,
+    Client,
+}
+
 #[component]
 pub fn MemberNode() -> impl IntoView {
     let params = use_params_map();
@@ -32,17 +38,21 @@ pub fn MemberNode() -> impl IntoView {
 
     match id_or_name() {
         IdName::Id(id) => {
+            provide_context(MemberSource::Server);
             view! {
                 <ServerNode id=id/>
             }
         }
         IdName::Name(name) => {
+            provide_context(MemberSource::Client);
             view! {
                 <ClientNode name=name/>
             }
         }
     }
 }
+
+pub type OriginalMember = Resource<(), Result<RawMember, ServerFnError>>;
 
 #[component]
 fn ServerNode(id: Uuid) -> impl IntoView {
@@ -56,16 +66,16 @@ fn ServerNode(id: Uuid) -> impl IntoView {
         }
     }
 
-    let member_resource = Resource::once(move || get_member(id));
+    let member_resource: OriginalMember = Resource::once(move || get_member(id));
     let member = move || {
         member_resource
             .get()
-            .map(|x| x.ok())
-            .flatten()
-            .map(|x| Member::from_raw(x))
+            .and_then(|x| x.ok())
+            .map(Member::from_raw)
             .unwrap_or_default()
     };
     let updates = expect_context::<member::Updates>();
+    provide_context(member_resource);
 
     view! {
     <section class="grid justify-items-center overflow-auto">
@@ -83,10 +93,14 @@ fn ServerNode(id: Uuid) -> impl IntoView {
 #[component]
 fn ClientNode(name: String) -> impl IntoView {
     let member = Member::new(name);
+    let updates = expect_context::<member::Updates>();
     view! {
     <section class="grid justify-items-center overflow-auto">
         <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
         <Node member=member/>
+        <Show when=move || updates.is_dirty()>
+            <button>"save"</button>
+        </Show>
     </section>
     }
 }
@@ -99,7 +113,6 @@ fn Node(member: Member) -> impl IntoView {
         member.action.set(member::Action::default());
         actions_waitlist.take(member.id);
     };
-    let updates = expect_context::<member::Updates>();
 
     view! {
     <div class="flex flex-col my-10 flex-nowrap">
@@ -121,9 +134,6 @@ fn Node(member: Member) -> impl IntoView {
           </For>
         </div>
       </Show>
-        <Show when=move || updates.is_dirty()>
-            <button>"save"</button>
-        </Show>
     </div>
     <Show when=move || actions_waitlist.check(member.id)>
         <Action/>
