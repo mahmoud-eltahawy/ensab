@@ -1,7 +1,5 @@
-use std::collections::{HashMap, HashSet};
-
 use contracts::member::{RawMember, SonlessRawMember};
-use leptos::{logging, RwSignal, SignalGet, SignalGetUntracked, SignalSet, SignalUpdate};
+use leptos::{RwSignal, SignalGetUntracked, SignalSet, SignalUpdate};
 use uuid::Uuid;
 
 #[derive(Clone, Copy, Default)]
@@ -22,23 +20,83 @@ pub struct Member {
     pub action: RwSignal<Action>,
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy)]
 pub struct Updates {
-    created: RwSignal<HashMap<Uuid, Vec<RawMember>>>,
-    updates: RwSignal<Vec<SonlessRawMember>>,
-    deleted: RwSignal<HashSet<Uuid>>,
+    origin: RwSignal<RawMember>,
+    pub copy: RwSignal<Member>,
 }
 
-pub trait Rm<T>
-where
-    T: Sized,
-{
-    fn find_son<'a>(&'a self, id: Uuid) -> Option<&'a T>;
+impl Updates {
+    pub fn init(member: Member) -> Self {
+        Self {
+            origin: RwSignal::from(member.raw()),
+            copy: RwSignal::new(member),
+        }
+    }
+}
+
+//     pub fn record_update(&self, new_updates: SonlessRawMember) {
+//         let previously_updated_member = self
+//             .updates
+//             .get_untracked()
+//             .into_iter()
+//             .find(|x| x.id == new_updates.id);
+
+//         match previously_updated_member {
+//             Some(_) => self.updates.update(|xs| {
+//                 xs.retain(|x| x.id != new_updates.id);
+//                 xs.push(new_updates);
+//             }),
+//             None => {
+//                 self.updates.update(|xs| xs.push(new_updates));
+//             }
+//         };
+//         logging::log!("{:#?}", self.updates.get_untracked());
+//     }
+
+//     pub fn remove_update(&self, id: Uuid) {
+//         self.updates.update(|xs| xs.retain(|x| x.id != id));
+//         logging::log!("{:#?}", self.updates.get_untracked());
+//     }
+
+//     pub fn record_create(&self, parent_id: Uuid, member: RawMember) {
+//         let old_parent_sons = self.created.get();
+//         let old_parent_sons = old_parent_sons.get(&parent_id);
+//         match old_parent_sons {
+//             Some(old_parent_sons) => {
+//                 let mut siblings = old_parent_sons
+//                     .iter()
+//                     .filter(|x| x.name != member.name)
+//                     .cloned()
+//                     .collect::<Vec<_>>();
+//                 self.created.update(|xs| {
+//                     siblings.push(member);
+//                     xs.insert(parent_id, siblings);
+//                 });
+//             }
+//             None => self.created.update(|xs| {
+//                 xs.insert(parent_id, vec![member]);
+//             }),
+//         }
+//         //BUG : sons are not mounted correctly
+//         logging::log!("{:#?}", self.created.get_untracked());
+//     }
+
+//     pub fn record_delete(&self, id: Uuid) {
+//         self.deleted.update(|xs| {
+//             xs.insert(id);
+//         });
+//         logging::log!("{:#?}", self.deleted.get_untracked());
+//     }
+// }
+
+pub trait Rm {
+    fn find_son(&self, id: Uuid) -> Option<&RawMember>;
     fn sonless(self) -> SonlessRawMember;
 }
 
-impl Rm<Self> for RawMember {
-    fn find_son<'a>(&'a self, id: Uuid) -> Option<&'a Self> {
+impl Rm for RawMember {
+    fn find_son(&self, id: Uuid) -> Option<&RawMember> {
         if self.id == id {
             return Some(self);
         } else {
@@ -57,72 +115,6 @@ impl Rm<Self> for RawMember {
             name: self.name,
             is_male: self.is_male,
         }
-    }
-}
-
-impl Updates {
-    pub fn is_dirty(&self) -> bool {
-        !self.deleted.get().is_empty()
-            || !self.updates.get().is_empty()
-            || !self.created.get().is_empty()
-    }
-
-    pub fn record_update(&self, new_updates: SonlessRawMember) {
-        let target_member = self
-            .updates
-            .get_untracked()
-            .into_iter()
-            .find(|x| x.id == new_updates.id);
-
-        match target_member {
-            Some(mut target_member) => {
-                target_member.name = new_updates.name;
-                target_member.is_male = new_updates.is_male;
-                self.updates.update(|xs| {
-                    xs.retain(|x| x.id != target_member.id);
-                    xs.push(target_member);
-                })
-            }
-            None => {
-                self.updates.update(|xs| xs.push(new_updates));
-            }
-        };
-        logging::log!("{:#?}", self.updates.get_untracked());
-    }
-
-    pub fn remove_update(&self, id: Uuid) {
-        self.updates.update(|xs| xs.retain(|x| x.id != id));
-        logging::log!("{:#?}", self.updates.get_untracked());
-    }
-
-    pub fn record_create(&self, parent_id: Uuid, member: RawMember) {
-        let old_parent_sons = self.created.get();
-        let old_parent_sons = old_parent_sons.get(&parent_id);
-        match old_parent_sons {
-            Some(old_parent_sons) => {
-                let mut siblings = old_parent_sons
-                    .iter()
-                    .filter(|x| x.name != member.name)
-                    .cloned()
-                    .collect::<Vec<_>>();
-                self.created.update(|xs| {
-                    siblings.push(member);
-                    xs.insert(parent_id, siblings);
-                });
-            }
-            None => self.created.update(|xs| {
-                xs.insert(parent_id, vec![member]);
-            }),
-        }
-        //BUG : sons are not mounted correctly
-        logging::log!("{:#?}", self.created.get_untracked());
-    }
-
-    pub fn record_delete(&self, id: Uuid) {
-        self.deleted.update(|xs| {
-            xs.insert(id);
-        });
-        logging::log!("{:#?}", self.deleted.get_untracked());
     }
 }
 
@@ -165,13 +157,13 @@ impl Member {
                 .collect::<Vec<_>>(),
         }
     }
-    pub fn sonless_raw(self) -> SonlessRawMember {
-        SonlessRawMember {
-            id: self.id,
-            name: self.name.get_untracked(),
-            is_male: self.is_male.get_untracked(),
-        }
-    }
+    // pub fn sonless_raw(self) -> SonlessRawMember {
+    //     SonlessRawMember {
+    //         id: self.id,
+    //         name: self.name.get_untracked(),
+    //         is_male: self.is_male.get_untracked(),
+    //     }
+    // }
 
     fn with_sons(&self, names: &mut Vec<String>) {
         let name = names.pop();

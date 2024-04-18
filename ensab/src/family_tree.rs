@@ -10,6 +10,8 @@ mod member_actions;
 use member::Member;
 use member_actions::*;
 
+use self::member::Updates;
+
 enum IdName {
     Id(Uuid),
     Name(String),
@@ -17,12 +19,21 @@ enum IdName {
 
 #[derive(Clone)]
 pub enum MemberSource {
-    Server,
+    Server(Updates),
     Client,
 }
 
 #[component]
 pub fn MemberNode() -> impl IntoView {
+    #[server]
+    async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
+        use db::{member::read, Pool, Postgres};
+        let pool = expect_context::<Pool<Postgres>>();
+        match read(&pool, id).await {
+            Ok(member) => Ok(member),
+            Err(err) => Err(ServerFnError::ServerError(err.to_string())),
+        }
+    }
     let params = use_params_map();
     let id_or_name = move || {
         let params = params.get();
@@ -34,13 +45,22 @@ pub fn MemberNode() -> impl IntoView {
     };
 
     provide_context(member_actions::ActionsWaitlist::new());
-    provide_context(member::Updates::default());
 
     match id_or_name() {
         IdName::Id(id) => {
-            provide_context(MemberSource::Server);
+            let member_resource = Resource::once(move || get_member(id));
+            let updates = move || {
+                let member = member_resource
+                    .get()
+                    .and_then(Result::ok)
+                    .map(Member::from_raw)
+                    .unwrap_or_default();
+                member::Updates::init(member)
+            };
             view! {
-                <ServerNode id=id/>
+            <Suspense>
+                <ServerNode updates=updates()/>
+            </Suspense>
             }
         }
         IdName::Name(name) => {
@@ -52,40 +72,14 @@ pub fn MemberNode() -> impl IntoView {
     }
 }
 
-pub type OriginalMember = Resource<(), Result<RawMember, ServerFnError>>;
-
 #[component]
-fn ServerNode(id: Uuid) -> impl IntoView {
-    #[server]
-    async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
-        use db::{member::read, Pool, Postgres};
-        let pool = expect_context::<Pool<Postgres>>();
-        match read(&pool, id).await {
-            Ok(member) => Ok(member),
-            Err(err) => Err(ServerFnError::ServerError(err.to_string())),
-        }
-    }
-
-    let member_resource: OriginalMember = Resource::once(move || get_member(id));
-    let member = move || {
-        member_resource
-            .get()
-            .and_then(|x| x.ok())
-            .map(Member::from_raw)
-            .unwrap_or_default()
-    };
-    let updates = expect_context::<member::Updates>();
-    provide_context(member_resource);
+fn ServerNode(updates: Updates) -> impl IntoView {
+    provide_context(MemberSource::Server(updates));
 
     view! {
     <section class="grid justify-items-center overflow-auto">
         <h1 class="text-center m-5 text-3xl">تعديل الشجرة</h1>
-        <Suspense>
-            <Node member=member()/>
-        </Suspense>
-        <Show when=move || updates.is_dirty()>
-            <button>"update"</button>
-        </Show>
+            <Node member=updates.copy.get()/>
     </section>
     }
 }
@@ -93,14 +87,10 @@ fn ServerNode(id: Uuid) -> impl IntoView {
 #[component]
 fn ClientNode(name: String) -> impl IntoView {
     let member = Member::new(name);
-    let updates = expect_context::<member::Updates>();
     view! {
     <section class="grid justify-items-center overflow-auto">
         <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
         <Node member=member/>
-        <Show when=move || updates.is_dirty()>
-            <button>"save"</button>
-        </Show>
     </section>
     }
 }
@@ -135,8 +125,6 @@ fn Node(member: Member) -> impl IntoView {
         </div>
       </Show>
     </div>
-    <Show when=move || actions_waitlist.check(member.id)>
-        <Action/>
-    </Show>
+    <Action/>
     }
 }

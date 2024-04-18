@@ -1,8 +1,5 @@
-use crate::family_tree::{member::Rm, MemberSource, OriginalMember};
-
 use super::member;
 
-use contracts::member::SonlessRawMember;
 use leptos::*;
 
 use uuid::Uuid;
@@ -17,7 +14,7 @@ impl ActionsWaitlist {
     pub fn take(&self, id: Uuid) {
         self.0.update(|xs| xs.push(id));
     }
-    pub fn check(&self, id: Uuid) -> bool {
+    fn check(&self, id: Uuid) -> bool {
         self.0.get().last().is_some_and(|x| *x == id)
     }
     fn redraw(&self, id: Uuid) {
@@ -28,11 +25,18 @@ impl ActionsWaitlist {
 #[component]
 pub fn Action() -> impl IntoView {
     let member = expect_context::<member::Member>();
-    move || match member.action.get() {
-        member::Action::Preview => view! { <Preview/> },
-        member::Action::Add => view! { <Add/> },
-        member::Action::Remove => view! { <Remove/> },
-        member::Action::Update => view! { <Update/> },
+    let actions_waitlist = expect_context::<ActionsWaitlist>();
+    move || {
+        if actions_waitlist.check(member.id) {
+            Some(match member.action.get() {
+                member::Action::Preview => view! { <Preview/> },
+                member::Action::Add => view! { <Add/> },
+                member::Action::Remove => view! { <Remove/> },
+                member::Action::Update => view! { <Update/> },
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -123,14 +127,12 @@ fn Add() -> impl IntoView {
         }
         names.set(value);
     };
-    let updates = expect_context::<member::Updates>();
     let submit = move || {
         let value: bool = select_ref.get().unwrap().value().parse().unwrap();
         names.get().split(',').for_each(|name| {
             let new_member = member::Member::create_from_name(name);
             new_member.is_male.set(value);
             member.add_son(new_member);
-            updates.record_create(member.id, new_member.raw());
         });
     };
 
@@ -184,15 +186,10 @@ fn Remove() -> impl IntoView {
         removed.update(|xs| xs.retain(|x| *x != id));
     };
 
-    let updates = expect_context::<member::Updates>();
     let submit = move || {
         member
             .sons
             .update(|xs| xs.retain(|x| !removed.get_untracked().contains(&x.id)));
-        removed
-            .get_untracked()
-            .into_iter()
-            .for_each(|x| updates.record_delete(x));
     };
     view! {
     <ActionDiv submit>
@@ -228,53 +225,14 @@ fn Update() -> impl IntoView {
     let name_ref = create_node_ref::<html::Input>();
     let gender_ref = create_node_ref::<html::Select>();
 
-    let updates = expect_context::<member::Updates>();
-    let member_source = expect_context::<MemberSource>();
-    let original_member_resource = match member_source {
-        MemberSource::Server => Some(expect_context::<OriginalMember>()),
-        MemberSource::Client => None,
-    };
-
-    let original_member = move || {
-        original_member_resource
-            .and_then(|res| res.get().map(|x| x.ok()))
-            .flatten()
-    };
-
     let submit = move || {
         let name = name_ref.get().unwrap().value().trim().to_string();
         let is_male: bool = gender_ref.get().unwrap().value().parse().unwrap();
         if name.is_empty() {
             return;
         }
-        let new_updates = SonlessRawMember {
-            id: member.id,
-            name: name.clone(),
-            is_male,
-        };
-        match original_member() {
-            Some(original) => {
-                if let Some(same_member) = original.find_son(member.id) {
-                    let original = same_member.clone().sonless();
-                    if (new_updates.name != original.name)
-                        || (new_updates.is_male != original.is_male)
-                    {
-                        updates.record_update(new_updates);
-                        member.name.set(name);
-                        member.is_male.set(is_male);
-                    } else {
-                        updates.remove_update(new_updates.id);
-                        member.name.set(original.name);
-                        member.is_male.set(original.is_male);
-                    }
-                };
-            }
-            None => {
-                updates.record_update(new_updates);
-                member.name.set(name);
-                member.is_male.set(is_male);
-            }
-        }
+        member.name.set(name);
+        member.is_male.set(is_male);
     };
     view! {
     <ActionDiv submit>
