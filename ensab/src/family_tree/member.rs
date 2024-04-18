@@ -47,7 +47,8 @@ impl Updates {
             let rest = origin
                 .sons
                 .into_iter()
-                .zip(copy.sons)
+                .filter(|x| copy.sons.iter().any(|y| x.id == y.id))
+                .zip(copy.sons.clone())
                 .map(|(origin, copy)| compare(origin, copy))
                 .flatten();
             rest.chain(first).collect()
