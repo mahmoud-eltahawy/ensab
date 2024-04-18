@@ -17,7 +17,7 @@ enum IdName {
     Name(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum MemberSource {
     Server(Updates),
     Client,
@@ -36,9 +36,8 @@ pub fn MemberNode() -> impl IntoView {
     }
     let params = use_params_map();
     let id_or_name = move || {
-        let params = params.get();
-        let name = params.get("name").unwrap();
-        match Uuid::from_str(name) {
+        let name = params.with(|x| x.get("name").cloned()).unwrap();
+        match Uuid::from_str(&name) {
             Ok(id) => IdName::Id(id),
             Err(_) => IdName::Name(name.to_string()),
         }
@@ -46,7 +45,7 @@ pub fn MemberNode() -> impl IntoView {
 
     provide_context(member_actions::ActionsWaitlist::new());
 
-    match id_or_name() {
+    move || match id_or_name() {
         IdName::Id(id) => {
             let member_resource = Resource::once(move || get_member(id));
             let updates = move || {
@@ -79,7 +78,7 @@ fn ServerNode(updates: Updates) -> impl IntoView {
     view! {
     <section class="grid justify-items-center overflow-auto">
         <h1 class="text-center m-5 text-3xl">تعديل الشجرة</h1>
-            <Node member=updates.copy.get()/>
+        <Node member=updates.copy.get_untracked()/>
     </section>
     }
 }

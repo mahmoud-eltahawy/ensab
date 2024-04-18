@@ -33,6 +33,75 @@ impl Updates {
             copy: RwSignal::new(member),
         }
     }
+
+    pub fn updates(&self) -> Vec<SonlessRawMember> {
+        let origin = self.origin.get_untracked();
+        let copy = self.copy.get_untracked().raw();
+
+        pub fn compare(origin: RawMember, copy: RawMember) -> Vec<SonlessRawMember> {
+            let first = if origin.name != copy.name || origin.is_male != copy.is_male {
+                vec![copy.clone().sonless()]
+            } else {
+                vec![]
+            };
+            let rest = origin
+                .sons
+                .into_iter()
+                .zip(copy.sons)
+                .map(|(origin, copy)| compare(origin, copy))
+                .flatten();
+            rest.chain(first).collect()
+        }
+        compare(origin, copy)
+    }
+
+    pub fn created(&self) -> Vec<RawMember> {
+        let origin = self.origin.get_untracked();
+        let copy = self.copy.get_untracked().raw();
+
+        pub fn compare(origin: RawMember, copy: RawMember) -> Vec<RawMember> {
+            let first = copy
+                .sons
+                .iter()
+                .filter(|son| origin.sons.iter().all(|x| x.id != son.id))
+                .cloned()
+                .collect::<Vec<_>>();
+
+            origin
+                .sons
+                .into_iter()
+                .zip(copy.sons)
+                .map(|(origin, copy)| compare(origin, copy))
+                .flatten()
+                .chain(first)
+                .collect::<Vec<_>>()
+        }
+        compare(origin, copy)
+    }
+
+    pub fn deleted(&self) -> Vec<Uuid> {
+        let origin = self.origin.get_untracked();
+        let copy = self.copy.get_untracked().raw();
+
+        pub fn compare(origin: RawMember, copy: RawMember) -> Vec<RawMember> {
+            let first = origin
+                .sons
+                .iter()
+                .filter(|son| copy.sons.iter().all(|x| x.id != son.id))
+                .cloned()
+                .collect::<Vec<_>>();
+
+            origin
+                .sons
+                .into_iter()
+                .zip(copy.sons)
+                .map(|(origin, copy)| compare(origin, copy))
+                .flatten()
+                .chain(first)
+                .collect::<Vec<_>>()
+        }
+        compare(origin, copy).into_iter().map(|x| x.id).collect()
+    }
 }
 
 //     pub fn record_update(&self, new_updates: SonlessRawMember) {
