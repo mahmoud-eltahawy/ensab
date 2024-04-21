@@ -7,7 +7,6 @@ import { Component, input, output } from "@angular/core";
   templateUrl: "./action.component.html",
 })
 export class ActionComponent {
-  cond = input.required<boolean>();
   submit = output();
   cancel = output();
 

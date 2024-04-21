@@ -1,4 +1,16 @@
-<actions-buttons [member]="member()"/>
-<add-son [member]="member()"/>
-<remove-son [member]="member()"/>
-<rename [member]="member()"/>
+@if (check()) {
+    @switch (member().action()) {
+        @case ('Preview') {
+            <actions-buttons [member]="member()"/>
+        }
+        @case ('Add') {
+            <add-son [member]="member()"/>
+        }
+        @case ('Remove') {
+            <remove-son [member]="member()"/>
+        }
+        @case ('Update') {
+            <rename [member]="member()"/>
+        }
+    }
+}

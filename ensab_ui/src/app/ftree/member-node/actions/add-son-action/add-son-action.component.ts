@@ -24,7 +24,7 @@ export class AddSonActionComponent {
       member.is_male.set(is_male);
       this.member().add_son(member);
     }
-    this.member().redrawAdd();
+    this.member().redrawAction();
   }
 
   is_only = signal(true);

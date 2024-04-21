@@ -88,10 +88,14 @@ class Updates {
   }
 }
 
+type Action = 'Preview'|'Add'|'Remove'|'Update'
+
 export default class Member {
   private static instance: Member;
 
   static updates = new Updates();
+  private waitlist = new Waitlist()
+  action : WritableSignal<Action>
   id: string;
   name: WritableSignal<string>;
   is_male: WritableSignal<boolean>;
@@ -106,6 +110,7 @@ export default class Member {
     this.id = id;
     this.name = signal(name);
     this.is_male = signal(is_male);
+    this.action = signal('Preview')
     if (sons.length === 0) {
       this.sons = signal([]);
     } else {
@@ -115,55 +120,34 @@ export default class Member {
     }
   }
 
-  action() {
-    Waitlists.actions.take(this.id)
+  takeAction() {
+    this.waitlist.take(this.id)
   }
 
-  canAction():boolean {
-    return Waitlists.actions.can(this.id)
+  checkAction(): boolean {
+    const list = Waitlist.list()
+    return list.at(list.length -1) === this.id
   }
 
-  redrawAction(){
-    Waitlists.actions.redraw(this.id)
+  private PreviewAction() {
+    this.action.set('Preview')
   }
 
-  removeSon() {
-    Waitlists.remove.take(this.id)
-    this.redrawAction()
+  redrawAction() {
+    this.waitlist.redraw(this.id)
+    this.PreviewAction()
   }
 
-  canRemove():boolean {
-    return Waitlists.remove.can(this.id)
+  removeAction() {
+    this.action.set('Remove')
   }
 
-  redrawRemove() {
-    Waitlists.remove.redraw(this.id)
+  updateAction() {
+    this.action.set('Update')
   }
 
-  update() {
-    Waitlists.updates.take(this.id)
-    this.redrawAction()
-  }
-
-  canUpdate():boolean {
-    return Waitlists.updates.can(this.id)
-  }
-
-  redrawUpdate() {
-    Waitlists.updates.redraw(this.id)
-  }
-
-  addSon() {
-    Waitlists.adding.take(this.id)
-    this.redrawAction()
-  }
-
-  canAdd():boolean {
-    return Waitlists.adding.can(this.id)
-  }
-
-  redrawAdd() {
-    Waitlists.adding.redraw(this.id)
+  addAction() {
+    this.action.set('Add')
   }
 
   static getInstance(name: string | undefined = undefined): Member {
@@ -236,28 +220,12 @@ export default class Member {
 }
 
 class Waitlist {
-  private list : WritableSignal<string[]> = signal([])
+  static list : WritableSignal<string[]> = signal([])
   take(id : string) {
-    this.list.update(xs => [...xs,id]);
+    Waitlist.list.update(xs => [...xs,id]);
   }
 
   redraw(id : string) {
-    this.list.update(xs => xs.filter(x => x !== id));
+    Waitlist.list.update(xs => xs.filter(x => x !== id));
   }
-
-  can(id : string):boolean {
-    const list = this.list()
-    if(list.at(list.length -1) === id) {
-      return true
-    } else {
-      return false
-    }
-  }
-}
-
-class Waitlists {
-  static actions = new Waitlist();
-  static updates = new Waitlist();
-  static adding = new Waitlist();
-  static remove = new Waitlist();
 }

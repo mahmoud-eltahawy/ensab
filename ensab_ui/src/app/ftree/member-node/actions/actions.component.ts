@@ -1,4 +1,4 @@
-import { Component, input } from "@angular/core";
+import { Component, computed, input } from "@angular/core";
 import { ActionsButtonsFormComponent } from "./actions-buttons-form/actions-buttons-form.component";
 import { AddSonActionComponent } from "./add-son-action/add-son-action.component";
 import { RemoveSonActionComponent } from "./remove-son-action/remove-son-action.component";
@@ -18,4 +18,5 @@ import Member from "../member";
 })
 export class ActionsComponent {
   member = input.required<Member>();
+  check = computed(() => this.member().checkAction());
 }

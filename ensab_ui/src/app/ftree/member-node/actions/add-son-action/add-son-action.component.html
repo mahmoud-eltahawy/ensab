@@ -1,7 +1,6 @@
 <action 
-    [cond]="member().canAdd()" 
     (submit)="on_submit()"
-    (cancel)="member().redrawAdd()"
+    (cancel)="member().redrawAction()"
 >
   <input
       [formControl]="name"
