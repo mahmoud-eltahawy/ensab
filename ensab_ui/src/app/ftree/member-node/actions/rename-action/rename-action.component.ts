@@ -26,6 +26,5 @@ export class RenameActionComponent implements OnInit {
     this.member().name.set(name[0]);
     this.member().is_male.set(is_male);
     this.member().redrawAction();
-    Member.updates.record_update(this.member().sonless_raw());
   }
 }

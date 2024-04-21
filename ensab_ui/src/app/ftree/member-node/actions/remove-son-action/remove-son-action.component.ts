@@ -19,12 +19,10 @@ export class RemoveSonActionComponent {
 
   remove(id: string) {
     this.removed.update((xs) => [...xs, id]);
-    this.member().remove_son_toggle(id);
   }
 
   restore(id: string) {
     this.removed.update((xs) => xs.filter((x) => x !== id));
-    this.member().remove_son_toggle(id);
   }
 
   get_removed = computed(() =>

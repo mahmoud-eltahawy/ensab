@@ -16,76 +16,56 @@ type SonlessRawMember = {
 };
 
 class Updates {
-  created: WritableSignal<Map<string, RawMember[]>>;
-  updates: WritableSignal<SonlessRawMember[]>;
-  deleted: WritableSignal<Set<string>>;
+  origin : RawMember;
+  copy : Member;
 
-  constructor() {
-    this.created = signal(new Map());
-    this.updates = signal([]);
-    this.deleted = signal(new Set());
+  constructor(member : Member) {
+    this.origin = member.raw()
+    this.copy = member;
   }
 
-  private clear() {
-    this.created.set(new Map());
-    this.updates.set([]);
-    this.deleted.set(new Set());
+  updates(): SonlessRawMember[] {
+    const origin = this.origin;
+    const copy = this.copy.raw();
+
+    function compare(origin: RawMember, copy: RawMember): SonlessRawMember[] {
+        let first : SonlessRawMember | undefined = undefined;
+        let rest : SonlessRawMember[] = []
+        if (origin.name != copy.name || origin.is_male != copy.is_male) {
+            first = {id : copy.id,name : copy.name,is_male : copy.is_male}
+        };
+        const copy_sons_ids = copy.sons.map(x => x.id);
+        const origin_sons = origin
+            .sons
+            .filter((x) => copy_sons_ids.includes(x.id));
+        for (let i = 0; i < origin_sons.length; i++) {
+          rest = rest.concat(compare(origin_sons[i],copy.sons[i]))
+        }
+        if (first) {
+          return [...rest,first]
+        } else {
+          return rest
+        }
+    }
+    return compare(origin, copy)
   }
 
-  is_dirty(): boolean {
-    return this.created().size !== 0 || this.updates().length !== 0 ||
-      this.deleted().size !== 0;
-  }
 
   commit(http: HttpClient) {
-    for (const [parent_id, sons] of this.created()) {
-      http.post(url(`member/${parent_id}`), sons).subscribe();
-    }
-    if (this.updates().length > 0) {
-      http.put(url("member"), this.updates()).subscribe();
-    }
-    for (const id of this.deleted()) {
-      http.delete(url(`member/${id}`)).subscribe();
-    }
-    this.clear();
+    console.log(this.updates())
+    // for (const [parent_id, sons] of this.created()) {
+    //   http.post(url(`member/${parent_id}`), sons).subscribe();
+    // }
+    // if (this.updates().length > 0) {
+    //   http.put(url("member"), this.updates()).subscribe();
+    // }
+    // for (const id of this.deleted()) {
+    //   http.delete(url(`member/${id}`)).subscribe();
+    // }
+    // this.clear();
+    // this.http.post("http://localhost:8080/member", member).subscribe();
   }
 
-  record_update(member: SonlessRawMember): void {
-    const old_member = this.updates().find((x) => x.id === member.id);
-    if (old_member) {
-      old_member.name = member.name;
-      old_member.is_male = member.is_male;
-    } else {
-      this.updates.update((xs) => [...xs, member]);
-    }
-    // TODO : check if the fields are matching original member and if so delete the update
-  }
-
-  record_create(parent_id: string, member: RawMember): void {
-    const old_parent_sons = this.created().get(parent_id);
-    if (old_parent_sons) {
-      const siblings = old_parent_sons.filter(x => x.name !== member.name)
-      this.created.update(xs => {
-        const new_sons = [...siblings, member];
-        const arr = Array.from(xs.entries());
-        return new Map([...arr, [parent_id, new_sons]]);
-      })
-    } else {
-      this.created.update(xs => {
-        const arr = Array.from(xs.entries());
-        return new Map([...arr, [parent_id, [member]]]);
-      })
-    }
-    console.log(this.created())
-  }
-
-  record_delete(id: string) {
-    if (this.deleted().has(id)) {
-      this.deleted.update((xs) => new Set([...xs].filter((x) => x !== id)));
-    } else {
-      this.deleted.update((xs) => new Set([...xs, id]));
-    }
-  }
 }
 
 type Action = 'Preview'|'Add'|'Remove'|'Update'
@@ -93,8 +73,7 @@ type Action = 'Preview'|'Add'|'Remove'|'Update'
 export default class Member {
   private static instance: Member;
   private static waitlist : WritableSignal<string[]> = signal([])
-
-  static updates = new Updates();
+  static updates : Updates;
   action : WritableSignal<Action>
   id: string;
   name: WritableSignal<string>;
@@ -153,12 +132,14 @@ export default class Member {
   static getInstance(name: string | undefined = undefined): Member {
     if (!this.instance && name) {
       Member.instance = new Member(name);
+      Member.updates = new Updates(Member.instance)
     }
     return Member.instance;
   }
 
   static getInstanceFromRaw({ id, name, is_male, sons }: RawMember): Member {
     Member.instance =  new Member(name, id, is_male, sons);
+    Member.updates = new Updates(Member.instance);
     return Member.instance;
   }
 
@@ -210,15 +191,6 @@ export default class Member {
       } 
     } else {
       this.sons.update(xs => [...xs,member])
-      Member.updates.record_create(this.id, member.raw());
     }
   }
-
-  remove_son_toggle(id: string) {
-    Member.updates.record_delete(id);
-  }
-}
-
-class Waitlist {
-  // static list : WritableSignal<string[]> = signal([])
 }

@@ -12,11 +12,6 @@ import { HttpClient, HttpClientModule } from "@angular/common/http";
 })
 export class FtreeComponent implements OnInit {
   member: Member | undefined;
-  create = true; //true means to create. false to update
-
-  show_save_button(): boolean {
-    return this.create || Member.updates.is_dirty();
-  }
 
   constructor(
     private route: ActivatedRoute,
@@ -25,11 +20,7 @@ export class FtreeComponent implements OnInit {
 
   createUpdate() {
     const member = Member.getInstance().raw();
-    if (this.create) {
-      this.http.post("http://localhost:8080/member", member).subscribe();
-    } else if (Member.updates.is_dirty()) {
-      Member.updates.commit(this.http);
-    }
+    Member.updates.commit(this.http);
   }
 
   ngOnInit() {
@@ -45,7 +36,6 @@ export class FtreeComponent implements OnInit {
             .subscribe((x) => {
               const member = Member.getInstanceFromRaw(x as RawMember);
               this.member = member;
-              this.create = false;
             });
         } catch (e) {
           console.log(e);
