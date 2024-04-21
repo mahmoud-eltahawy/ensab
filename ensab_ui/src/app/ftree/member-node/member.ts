@@ -92,9 +92,9 @@ type Action = 'Preview'|'Add'|'Remove'|'Update'
 
 export default class Member {
   private static instance: Member;
+  private static waitlist : WritableSignal<string[]> = signal([])
 
   static updates = new Updates();
-  private waitlist = new Waitlist()
   action : WritableSignal<Action>
   id: string;
   name: WritableSignal<string>;
@@ -121,11 +121,11 @@ export default class Member {
   }
 
   takeAction() {
-    this.waitlist.take(this.id)
+    Member.waitlist.update(xs => [...xs,this.id]);
   }
 
   checkAction(): boolean {
-    const list = Waitlist.list()
+    const list = Member.waitlist()
     return list.at(list.length -1) === this.id
   }
 
@@ -134,7 +134,7 @@ export default class Member {
   }
 
   redrawAction() {
-    this.waitlist.redraw(this.id)
+    Member.waitlist.update(xs => xs.filter(x => x !== this.id));
     this.PreviewAction()
   }
 
@@ -220,12 +220,5 @@ export default class Member {
 }
 
 class Waitlist {
-  static list : WritableSignal<string[]> = signal([])
-  take(id : string) {
-    Waitlist.list.update(xs => [...xs,id]);
-  }
-
-  redraw(id : string) {
-    Waitlist.list.update(xs => xs.filter(x => x !== id));
-  }
+  // static list : WritableSignal<string[]> = signal([])
 }
