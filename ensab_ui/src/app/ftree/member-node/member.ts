@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { signal, WritableSignal } from "@angular/core";
-// import { url } from "../../shared";
+import { url } from "../../shared";
 
 export type RawMember = {
   id: string;
@@ -53,24 +53,32 @@ class Updates {
     return compare(origin, copy)
   }
 
-  private created():RawMember[] {
+  private created():[string,RawMember[]][] {
     const origin = this.origin;
     const copy = this.copy.raw();
 
-    function compare(origin: RawMember, copy: RawMember) : RawMember[] {
+    function compare(origin: RawMember, copy: RawMember) : [string,RawMember[]][] {
       const origin_sons_ids = origin.sons.map(x => x.id);
-      const first = copy
+      const copy_sons = copy
           .sons
           .filter(son => !origin_sons_ids.includes(son.id));
+      let first : [string,RawMember[]] | undefined= undefined 
+      if (copy_sons.length > 0) {
+        first = [copy.id,copy_sons]
+      }
 
-      let rest : RawMember[] = []
+      let rest : [string,RawMember[]][] = []
       for(const origin_son of origin.sons) {
         const copy_son = copy.sons.find(x => x.id === origin_son.id)
         if (copy_son) {
           rest = rest.concat(compare(origin_son,copy_son))
         }
       }
-      return [...rest,...first];
+      if (first) {
+        return [...rest,first];
+      } else {
+        return rest;
+      }
     }
 
     return compare(origin, copy)
@@ -103,20 +111,16 @@ class Updates {
   }
 
 
-  commit(_http: HttpClient) {
-    console.log(this.created())
-    console.log(this.updates())
-    console.log(this.deleted())
-    // for (const [parent_id, sons] of this.created()) {
-    //   http.post(url(`member/${parent_id}`), sons).subscribe();
-    // }
-    // if (this.updates().length > 0) {
-    //   http.put(url("member"), this.updates()).subscribe();
-    // }
-    // for (const id of this.deleted()) {
-    //   http.delete(url(`member/${id}`)).subscribe();
-    // }
-    // this.clear();
+  commit(http: HttpClient) {
+    for (const [parent_id, sons] of this.created()) {
+      http.post(url(`member/${parent_id}`), sons).subscribe();
+    }
+    if (this.updates().length > 0) {
+      http.put(url("member"), this.updates()).subscribe();
+    }
+    for (const id of this.deleted()) {
+      http.delete(url(`member/${id}`)).subscribe();
+    }
     // this.http.post("http://localhost:8080/member", member).subscribe();
   }
 
