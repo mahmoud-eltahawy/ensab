@@ -18,9 +18,12 @@ export class FtreeComponent implements OnInit {
     private http: HttpClient,
   ) {}
 
-  createUpdate() {
-    const member = Member.getInstance().raw();
+  saveUpdates() {
     Member.updates.commit(this.http);
+  }
+
+  discardUpdates() {
+    Member.updates.discard();
   }
 
   ngOnInit() {

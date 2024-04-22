@@ -2,9 +2,9 @@
   <h1 class="text-center m-5 text-3xl">بناء الشجرة</h1>
   <member-node [member]="member!" />
 </section>
-<div class="grid justify-items-center">
-<button 
-  class="text-center m-5 text-2xl border-2 hover:border-dashed p-5 rounded-lg" 
-  (click)="createUpdate()"
->حفظ</button>
+<div class="grid grid-cols-2 justify-items-center">
+  <button class="text-center m-5 text-2xl border-2 hover:border-dashed p-5 rounded-lg"
+    (click)="discardUpdates()">الغاء</button>
+  <button class="text-center m-5 text-2xl border-2 hover:border-dashed p-5 rounded-lg"
+    (click)="saveUpdates()">حفظ</button>
 </div>

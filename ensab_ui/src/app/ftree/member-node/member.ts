@@ -110,7 +110,6 @@ class Updates {
     return compare(origin, copy).map(x => x.id)
   }
 
-
   commit(http: HttpClient) {
     for (const [parent_id, sons] of this.created()) {
       http.post(url(`member/${parent_id}`), sons).subscribe();
@@ -121,9 +120,14 @@ class Updates {
     for (const id of this.deleted()) {
       http.delete(url(`member/${id}`)).subscribe();
     }
-    // this.http.post("http://localhost:8080/member", member).subscribe();
+    this.origin = this.copy.raw()
   }
 
+  discard() {
+    this.copy.name.set(this.origin.name);
+    this.copy.is_male.set(this.origin.is_male);
+    this.copy.sons.set(this.origin.sons.map(x => Member.createFromRaw(x)));
+  }
 }
 
 type Action = 'Preview'|'Add'|'Remove'|'Update'
@@ -199,6 +203,9 @@ export default class Member {
     Member.instance =  new Member(name, id, is_male, sons);
     Member.updates = new Updates(Member.instance);
     return Member.instance;
+  }
+  static createFromRaw({ id, name, is_male, sons }: RawMember): Member {
+    return new Member(name, id, is_male, sons);
   }
 
   raw(): RawMember {
