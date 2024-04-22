@@ -40,42 +40,44 @@ impl Updates {
 
         pub fn compare(origin: RawMember, copy: RawMember) -> Vec<SonlessRawMember> {
             let first = if origin.name != copy.name || origin.is_male != copy.is_male {
-                vec![copy.clone().sonless()]
+                Some(copy.clone().sonless())
             } else {
-                vec![]
+                None
             };
-            let rest = origin
-                .sons
-                .into_iter()
-                .filter(|x| copy.sons.iter().any(|y| x.id == y.id))
-                .zip(copy.sons.clone())
-                .map(|(origin, copy)| compare(origin, copy))
-                .flatten();
-            rest.chain(first).collect()
+            let mut rest = Vec::new();
+            if let Some(son) = first {
+                rest.push(son);
+            }
+            for origin_son in origin.sons {
+                let copy_son = copy.sons.iter().find(|x| x.id == origin_son.id);
+                if let Some(copy_son) = copy_son {
+                    rest.extend(compare(origin_son, copy_son.clone()));
+                }
+            }
+            rest
         }
         compare(origin, copy)
     }
 
-    pub fn created(&self) -> Vec<RawMember> {
+    pub fn created(&self) -> Vec<(Uuid, RawMember)> {
         let origin = self.origin.get_untracked();
         let copy = self.copy.get_untracked().raw();
 
-        pub fn compare(origin: RawMember, copy: RawMember) -> Vec<RawMember> {
-            let first = copy
+        pub fn compare(origin: RawMember, copy: RawMember) -> Vec<(Uuid, RawMember)> {
+            let mut rest = copy
                 .sons
                 .iter()
                 .filter(|son| origin.sons.iter().all(|x| x.id != son.id))
                 .cloned()
+                .map(|x| (copy.id, x))
                 .collect::<Vec<_>>();
-
-            origin
-                .sons
-                .into_iter()
-                .zip(copy.sons)
-                .map(|(origin, copy)| compare(origin, copy))
-                .flatten()
-                .chain(first)
-                .collect::<Vec<_>>()
+            for origin_son in origin.sons {
+                let copy_son = copy.sons.iter().find(|x| x.id == origin_son.id);
+                if let Some(copy_son) = copy_son {
+                    rest.extend(compare(origin_son, copy_son.clone()));
+                }
+            }
+            rest
         }
         compare(origin, copy)
     }
@@ -85,21 +87,19 @@ impl Updates {
         let copy = self.copy.get_untracked().raw();
 
         pub fn compare(origin: RawMember, copy: RawMember) -> Vec<RawMember> {
-            let first = origin
+            let mut rest = origin
                 .sons
                 .iter()
                 .filter(|son| copy.sons.iter().all(|x| x.id != son.id))
                 .cloned()
                 .collect::<Vec<_>>();
-
-            origin
-                .sons
-                .into_iter()
-                .zip(copy.sons)
-                .map(|(origin, copy)| compare(origin, copy))
-                .flatten()
-                .chain(first)
-                .collect::<Vec<_>>()
+            for origin_son in origin.sons {
+                let copy_son = copy.sons.iter().find(|x| x.id == origin_son.id);
+                if let Some(copy_son) = copy_son {
+                    rest.extend(compare(origin_son, copy_son.clone()));
+                }
+            }
+            rest
         }
         compare(origin, copy).into_iter().map(|x| x.id).collect()
     }
