@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { signal, WritableSignal } from "@angular/core";
-import { url } from "../../shared";
+// import { url } from "../../shared";
 
 export type RawMember = {
   id: string;
@@ -24,7 +24,7 @@ class Updates {
     this.copy = member;
   }
 
-  updates(): SonlessRawMember[] {
+  private updates(): SonlessRawMember[] {
     const origin = this.origin;
     const copy = this.copy.raw();
 
@@ -38,8 +38,11 @@ class Updates {
         const origin_sons = origin
             .sons
             .filter((x) => copy_sons_ids.includes(x.id));
-        for (let i = 0; i < origin_sons.length; i++) {
-          rest = rest.concat(compare(origin_sons[i],copy.sons[i]))
+        for (const origin_son of origin_sons) {
+          const copy_son = copy.sons.find(x => x.id === origin_son.id)
+          if (copy_son) {
+            rest = rest.concat(compare(origin_son,copy_son))
+          }
         }
         if (first) {
           return [...rest,first]
@@ -50,9 +53,60 @@ class Updates {
     return compare(origin, copy)
   }
 
+  private created():RawMember[] {
+    const origin = this.origin;
+    const copy = this.copy.raw();
 
-  commit(http: HttpClient) {
+    function compare(origin: RawMember, copy: RawMember) : RawMember[] {
+      const origin_sons_ids = origin.sons.map(x => x.id);
+      const first = copy
+          .sons
+          .filter(son => !origin_sons_ids.includes(son.id));
+
+      let rest : RawMember[] = []
+      for(const origin_son of origin.sons) {
+        const copy_son = copy.sons.find(x => x.id === origin_son.id)
+        if (copy_son) {
+          rest = rest.concat(compare(origin_son,copy_son))
+        }
+      }
+      return [...rest,...first];
+    }
+
+    return compare(origin, copy)
+  }
+
+  private deleted():string[] {
+    const origin = this.origin;
+    const copy = this.copy.raw();
+
+    function compare(origin: RawMember, copy: RawMember) : RawMember[] {
+      if (!copy || !origin) {
+        return []
+      }
+      const copy_sons_ids = copy.sons.map(x => x.id);
+      let first = origin
+          .sons
+          .filter(son => !copy_sons_ids.includes(son.id))
+
+      let rest : RawMember[] = []
+      for(const origin_son of origin.sons) {
+        const copy_son = copy.sons.find(x => x.id === origin_son.id)
+        if (copy_son) {
+          rest = rest.concat(compare(origin_son,copy_son))
+        }
+      }
+      return [...rest,...first];
+    }
+
+    return compare(origin, copy).map(x => x.id)
+  }
+
+
+  commit(_http: HttpClient) {
+    console.log(this.created())
     console.log(this.updates())
+    console.log(this.deleted())
     // for (const [parent_id, sons] of this.created()) {
     //   http.post(url(`member/${parent_id}`), sons).subscribe();
     // }
