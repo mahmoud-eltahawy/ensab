@@ -137,12 +137,14 @@ fn Add() -> impl IntoView {
             new_member.is_male.set(value);
             member.add_son(new_member);
         });
-        match member_source {
-            MemberSource::Server(updates) => {
-                logging::log!("{:#?}", updates.created())
-            }
-            _ => {}
-        };
+        spawn_local(async move {
+            match member_source {
+                MemberSource::Server(updates) => {
+                    updates.commit().await.unwrap();
+                }
+                _ => {}
+            };
+        })
     };
 
     view! {
@@ -201,12 +203,14 @@ fn Remove() -> impl IntoView {
             .sons
             .update(|xs| xs.retain(|x| !removed.get_untracked().contains(&x.id)));
 
-        match member_source {
-            MemberSource::Server(updates) => {
-                logging::log!("{:#?}", updates.deleted())
-            }
-            _ => {}
-        };
+        spawn_local(async move {
+            match member_source {
+                MemberSource::Server(updates) => {
+                    updates.commit().await.unwrap();
+                }
+                _ => {}
+            };
+        })
     };
     view! {
     <ActionDiv submit>
@@ -251,12 +255,14 @@ fn Update() -> impl IntoView {
         }
         member.name.set(name);
         member.is_male.set(is_male);
-        match member_source {
-            MemberSource::Server(updates) => {
-                logging::log!("{:#?}", updates.updates())
-            }
-            _ => {}
-        };
+        spawn_local(async move {
+            match member_source {
+                MemberSource::Server(updates) => {
+                    updates.commit().await.unwrap();
+                }
+                _ => {}
+            };
+        })
     };
     view! {
     <ActionDiv submit>
