@@ -5,13 +5,13 @@ use uuid::Uuid;
 use contracts::member::{RawMember, SonlessRawMember};
 
 pub async fn create(
+    transaction: &mut Transaction<'_, Postgres>,
     RawMember {
         id,
         name,
         is_male,
         sons,
     }: RawMember,
-    transaction: &mut Transaction<'_, Postgres>,
     parent_id: Option<Uuid>,
 ) -> anyhow::Result<()> {
     let now = Utc::now();
@@ -30,14 +30,16 @@ pub async fn create(
     .execute(&mut **transaction)
     .await?;
     for son in sons {
-        Box::pin(create(son, transaction, Some(id))).await?;
+        Box::pin(create(transaction, son, Some(id))).await?;
     }
 
     Ok(())
 }
 
-pub async fn update(pool: Pool<Postgres>, members: Vec<SonlessRawMember>) -> anyhow::Result<()> {
-    let mut transaction = pool.begin().await?;
+pub async fn update(
+    transaction: &mut Transaction<'_, Postgres>,
+    members: Vec<SonlessRawMember>,
+) -> anyhow::Result<()> {
     for member in members {
         query!(
             r#"
@@ -47,16 +49,15 @@ pub async fn update(pool: Pool<Postgres>, members: Vec<SonlessRawMember>) -> any
             member.name,
             member.is_male
         )
-        .execute(&mut *transaction)
+        .execute(&mut **transaction)
         .await?;
     }
-    transaction.commit().await?;
     Ok(())
 }
 
-pub async fn delete(pool: Pool<Postgres>, id: Uuid) -> anyhow::Result<()> {
+pub async fn delete(transaction: &mut Transaction<'_, Postgres>, id: Uuid) -> anyhow::Result<()> {
     query!("delete from member where id = $1", id)
-        .execute(&pool)
+        .execute(&mut **transaction)
         .await?;
     Ok(())
 }

@@ -25,7 +25,7 @@ pub enum MemberSource {
 
 #[component]
 pub fn MemberNode() -> impl IntoView {
-    #[server]
+    #[server(encoding = "Cbor")]
     async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
         use db::{member::read, Pool, Postgres};
         let pool = expect_context::<Pool<Postgres>>();

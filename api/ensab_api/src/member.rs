@@ -18,7 +18,7 @@ async fn create_fatherless(
     Json(member): Json<RawMember>,
 ) -> Result<StatusCode, AppError> {
     let mut transaction = state.pool.begin().await?;
-    member::create(member, &mut transaction, None).await?;
+    member::create(&mut transaction, member, None).await?;
     transaction.commit().await?;
     Ok(StatusCode::CREATED)
 }
@@ -30,7 +30,7 @@ async fn create_sons(
 ) -> Result<StatusCode, AppError> {
     let mut transaction = state.pool.begin().await?;
     for member in members {
-        member::create(member, &mut transaction, Some(parent_id)).await?;
+        member::create(&mut transaction, member, Some(parent_id)).await?;
     }
     transaction.commit().await?;
     Ok(StatusCode::CREATED)
@@ -40,7 +40,9 @@ async fn update(
     State(state): State<AppState>,
     Json(members): Json<Vec<SonlessRawMember>>,
 ) -> Result<StatusCode, AppError> {
-    member::update(state.pool, members).await?;
+    let mut transaction = state.pool.begin().await?;
+    member::update(&mut transaction, members).await?;
+    transaction.commit().await?;
     Ok(StatusCode::OK)
 }
 
@@ -48,7 +50,9 @@ async fn delete(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<StatusCode, AppError> {
-    member::delete(state.pool, id).await?;
+    let mut transaction = state.pool.begin().await?;
+    member::delete(&mut transaction, id).await?;
+    transaction.commit().await?;
     Ok(StatusCode::OK)
 }
 

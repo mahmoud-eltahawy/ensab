@@ -1,5 +1,6 @@
 use contracts::member::{RawMember, SonlessRawMember};
 use leptos::{server, RwSignal, ServerFnError, SignalGetUntracked, SignalSet, SignalUpdate};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Clone, Copy, Default)]
@@ -105,35 +106,58 @@ impl Updates {
     }
 
     pub async fn commit(&self) -> Result<(), ServerFnError> {
-        for member in self.updates() {
-            update_member(member).await?;
-        }
-        for (parent_id, member) in self.created() {
-            save_member_son(parent_id, member).await?;
-        }
-        for id in self.deleted() {
-            delete_member(id).await?;
-        }
+        let updated_members = self.updates();
+        let created_members = self.created();
+        let deleted_members = self.deleted();
+        server_commit(ServerUpdates {
+            created_members,
+            deleted_members,
+            updated_members,
+        })
+        .await?;
         self.origin.set(self.copy.get_untracked().raw());
         Ok(())
     }
+
     pub fn discard(&self) {
         self.copy.set(Member::from_raw(self.origin.get_untracked()));
     }
 }
-#[server(encoding = "Cbor")]
-async fn save_member_son(parent_id: Uuid, son: RawMember) -> Result<(), ServerFnError> {
-    println!("parent id : {}\nson : {:#?}", parent_id, son);
-    Ok(())
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ServerUpdates {
+    created_members: Vec<(Uuid, RawMember)>,
+    deleted_members: Vec<Uuid>,
+    updated_members: Vec<SonlessRawMember>,
 }
+
 #[server(encoding = "Cbor")]
-async fn delete_member(id: Uuid) -> Result<(), ServerFnError> {
-    println!("deleted id : {}", id);
-    Ok(())
-}
-#[server(encoding = "Cbor")]
-async fn update_member(member: SonlessRawMember) -> Result<(), ServerFnError> {
-    println!("update member : {:#?}", member);
+async fn server_commit(updates: ServerUpdates) -> Result<(), ServerFnError> {
+    use db::{member, Pool, Postgres};
+    use leptos::expect_context;
+    let pool = expect_context::<Pool<Postgres>>();
+    let mut transaction = pool.begin().await?;
+    for (parent_id, member) in updates.created_members {
+        let Ok(_) = member::create(&mut transaction, member, Some(parent_id)).await else {
+            return Err(ServerFnError::ServerError(
+                "error creating member".to_string(),
+            ));
+        };
+    }
+    for id in updates.deleted_members {
+        let Ok(_) = member::delete(&mut transaction, id).await else {
+            return Err(ServerFnError::ServerError(
+                "error deleting member".to_string(),
+            ));
+        };
+    }
+    let Ok(_) = member::update(&mut transaction, updates.updated_members).await else {
+        return Err(ServerFnError::ServerError(
+            "error updating member".to_string(),
+        ));
+    };
+
+    transaction.commit().await?;
     Ok(())
 }
 
