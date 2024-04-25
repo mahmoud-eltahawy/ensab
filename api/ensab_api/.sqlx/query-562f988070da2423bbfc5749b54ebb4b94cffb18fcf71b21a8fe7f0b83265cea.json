@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO \"member\" (id,\"name\",is_male,insert_date,parent_id)\n            VALUES($1,$2,$3,$4,$5);\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar",
+        "Bool",
+        "Timestamp",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "562f988070da2423bbfc5749b54ebb4b94cffb18fcf71b21a8fe7f0b83265cea"
+}
