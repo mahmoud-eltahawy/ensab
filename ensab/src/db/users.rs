@@ -1,6 +1,7 @@
+use crate::db::User;
 use anyhow::Ok;
-use contracts::users::User;
 use sqlx::{query, query_as, Pool, Postgres};
+
 use uuid::Uuid;
 
 pub async fn create(

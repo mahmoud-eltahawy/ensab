@@ -1,8 +1,7 @@
+use crate::db::{RawMember, SonlessRawMember};
 use chrono::{NaiveDateTime, Utc};
 use sqlx::{query, Pool, Postgres, Transaction};
 use uuid::Uuid;
-
-use contracts::member::{RawMember, SonlessRawMember};
 
 pub async fn create(
     transaction: &mut Transaction<'_, Postgres>,

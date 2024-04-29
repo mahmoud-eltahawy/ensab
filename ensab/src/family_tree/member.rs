@@ -1,4 +1,4 @@
-use contracts::member::{RawMember, SonlessRawMember};
+use crate::db::{RawMember, SonlessRawMember};
 use leptos::{server, RwSignal, ServerFnError, SignalGetUntracked, SignalSet, SignalUpdate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -133,7 +133,7 @@ struct ServerUpdates {
 
 #[server(encoding = "Cbor")]
 async fn server_commit(updates: ServerUpdates) -> Result<(), ServerFnError> {
-    use db::{member, Pool, Postgres};
+    use crate::db::{member, Pool, Postgres};
     use leptos::expect_context;
     let pool = expect_context::<Pool<Postgres>>();
     let mut transaction = pool.begin().await?;

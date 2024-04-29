@@ -1,4 +1,5 @@
 pub mod app;
+pub mod db;
 pub mod error_template;
 pub mod family_tree;
 

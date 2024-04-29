@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use contracts::member::RawMember;
+use crate::db::RawMember;
 use leptos::*;
 use leptos_router::use_params_map;
 use uuid::Uuid;
@@ -27,7 +27,7 @@ pub enum MemberSource {
 pub fn MemberNode() -> impl IntoView {
     #[server(encoding = "Cbor")]
     async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
-        use db::{member::read, Pool, Postgres};
+        use crate::db::{member::read, Pool, Postgres};
         let pool = expect_context::<Pool<Postgres>>();
         match read(&pool, id).await {
             Ok(member) => Ok(member),

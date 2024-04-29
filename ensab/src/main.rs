@@ -2,8 +2,8 @@
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     use axum::Router;
-    use db::get_postgres_pool;
     use ensab::app::*;
+    use ensab::db::get_postgres_pool;
     use ensab::fileserv::file_and_error_handler;
     use leptos::{provide_context, *};
     use leptos_axum::{generate_route_list, LeptosRoutes};

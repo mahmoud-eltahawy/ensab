@@ -21,21 +21,20 @@ thiserror = "1"
 tracing = { version = "0.1", optional = true }
 http = "1"
 uuid = { version = "1.8.0", features = ["serde","v4"] }
-serde = { version = "1.0.197", features = ["derive"] }
-contracts = {path = "../api/contracts"}
-db = {path = "../api/db",optional = true}
-leptos-use = "0.10.7"
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4.37", features = ["serde"] }
+sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls","postgres","uuid","chrono" ] ,optional = true}
+anyhow = "1.0.81"
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
 ssr = [
     "dep:axum",
     "dep:tokio",
-    "dep:db",
+    "dep:sqlx",
     "dep:tower",
     "dep:tower-http",
     "dep:leptos_axum",
-    "leptos-use/ssr",
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
