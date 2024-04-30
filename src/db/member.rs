@@ -1,8 +1,24 @@
-use crate::db::{RawMember, SonlessRawMember};
-use chrono::{NaiveDateTime, Utc};
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ssr")]
 use sqlx::{query, Pool, Postgres, Transaction};
 use uuid::Uuid;
 
+#[derive(Serialize, Deserialize, Clone, Default, PartialEq, Eq, Debug)]
+pub struct RawMember {
+    pub id: Uuid,
+    pub name: String,
+    pub is_male: bool,
+    pub sons: Vec<RawMember>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct SonlessRawMember {
+    pub id: Uuid,
+    pub name: String,
+    pub is_male: bool,
+}
+
+#[cfg(feature = "ssr")]
 pub async fn create(
     transaction: &mut Transaction<'_, Postgres>,
     RawMember {
@@ -13,6 +29,7 @@ pub async fn create(
     }: RawMember,
     parent_id: Option<Uuid>,
 ) -> anyhow::Result<()> {
+    use chrono::{NaiveDateTime, Utc};
     let now = Utc::now();
     let now = NaiveDateTime::new(now.date_naive(), now.time());
     query!(
@@ -35,6 +52,7 @@ pub async fn create(
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn update(
     transaction: &mut Transaction<'_, Postgres>,
     members: Vec<SonlessRawMember>,
@@ -54,6 +72,7 @@ pub async fn update(
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn delete(transaction: &mut Transaction<'_, Postgres>, id: Uuid) -> anyhow::Result<()> {
     query!("delete from member where id = $1", id)
         .execute(&mut **transaction)
@@ -61,6 +80,7 @@ pub async fn delete(transaction: &mut Transaction<'_, Postgres>, id: Uuid) -> an
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn read(pool: &Pool<Postgres>, id: Uuid) -> anyhow::Result<RawMember> {
     let sons_ids = query!(
         "select id from member where parent_id = $1 and id <> uuid_nil()",

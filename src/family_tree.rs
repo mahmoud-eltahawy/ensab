@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::db::RawMember;
+use crate::db::member::RawMember;
 use leptos::*;
 use leptos_router::use_params_map;
 use uuid::Uuid;

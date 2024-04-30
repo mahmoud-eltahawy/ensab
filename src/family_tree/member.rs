@@ -1,4 +1,4 @@
-use crate::db::{RawMember, SonlessRawMember};
+use crate::db::member::{RawMember, SonlessRawMember};
 use leptos::{server, RwSignal, ServerFnError, SignalGetUntracked, SignalSet, SignalUpdate};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

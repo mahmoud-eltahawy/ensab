@@ -1,9 +1,20 @@
-use crate::db::User;
+#[cfg(feature = "ssr")]
 use anyhow::Ok;
+#[cfg(feature = "ssr")]
 use sqlx::{query, query_as, Pool, Postgres};
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+#[derive(Serialize, Deserialize)]
+pub struct User {
+    pub id: Uuid,
+    pub username: String,
+    pub password: String,
+    pub member_id: Option<Uuid>,
+}
+
+#[cfg(feature = "ssr")]
 pub async fn create(
     User {
         id,
@@ -28,6 +39,7 @@ pub async fn create(
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn update(
     pool: &Pool<Postgres>,
     User {
@@ -51,6 +63,7 @@ pub async fn update(
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn delete(pool: Pool<Postgres>, id: Uuid) -> anyhow::Result<()> {
     query!("delete from users where id = $1", id)
         .execute(&pool)
@@ -58,6 +71,7 @@ pub async fn delete(pool: Pool<Postgres>, id: Uuid) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[cfg(feature = "ssr")]
 pub async fn read(pool: &Pool<Postgres>, id: Uuid) -> anyhow::Result<User> {
     let user = query_as!(User, "select * from users where id = $1", id)
         .fetch_one(pool)
