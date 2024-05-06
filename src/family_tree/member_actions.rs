@@ -1,5 +1,3 @@
-use crate::family_tree::MemberSource;
-
 use super::member;
 
 use leptos::*;
@@ -120,7 +118,6 @@ fn Add() -> impl IntoView {
     let names = RwSignal::new(String::new());
     let select_ref = create_node_ref::<html::Select>();
     let member = expect_context::<member::Member>();
-    let member_source = expect_context::<MemberSource>();
     let on_input = move |ev| {
         let value = event_target_value(&ev);
         if value.contains(',') {
@@ -137,14 +134,6 @@ fn Add() -> impl IntoView {
             new_member.is_male.set(value);
             member.add_son(new_member);
         });
-        spawn_local(async move {
-            match member_source {
-                MemberSource::Server(updates) => {
-                    updates.commit().await.unwrap();
-                }
-                _ => {}
-            };
-        })
     };
 
     view! {
@@ -174,7 +163,6 @@ fn Add() -> impl IntoView {
 fn Remove() -> impl IntoView {
     let member = expect_context::<member::Member>();
     let removed = RwSignal::new(Vec::new());
-    let member_source = expect_context::<MemberSource>();
     let get_restored = move || {
         member
             .sons
@@ -202,15 +190,6 @@ fn Remove() -> impl IntoView {
         member
             .sons
             .update(|xs| xs.retain(|x| !removed.get_untracked().contains(&x.id)));
-
-        spawn_local(async move {
-            match member_source {
-                MemberSource::Server(updates) => {
-                    updates.commit().await.unwrap();
-                }
-                _ => {}
-            };
-        })
     };
     view! {
     <ActionDiv submit>
@@ -243,7 +222,6 @@ fn Remove() -> impl IntoView {
 #[component]
 fn Update() -> impl IntoView {
     let member = expect_context::<member::Member>();
-    let member_source = expect_context::<MemberSource>();
     let name_ref = create_node_ref::<html::Input>();
     let gender_ref = create_node_ref::<html::Select>();
 
@@ -255,14 +233,6 @@ fn Update() -> impl IntoView {
         }
         member.name.set(name);
         member.is_male.set(is_male);
-        spawn_local(async move {
-            match member_source {
-                MemberSource::Server(updates) => {
-                    updates.commit().await.unwrap();
-                }
-                _ => {}
-            };
-        })
     };
     view! {
     <ActionDiv submit>
