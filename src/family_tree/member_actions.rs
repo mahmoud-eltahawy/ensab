@@ -24,12 +24,9 @@ impl ActionsWaitlist {
 
 #[component]
 pub fn Action() -> impl IntoView {
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let actions_waitlist = expect_context::<ActionsWaitlist>();
     move || {
-        let Some(member) = member else {
-            return None;
-        };
         if actions_waitlist.check(member.id) {
             Some(match member.action.get() {
                 member::Action::Preview => view! { <Preview/> },
@@ -47,11 +44,8 @@ pub fn Action() -> impl IntoView {
 fn Preview() -> impl IntoView {
     #[component]
     fn AButton(value: String, action: member::Action) -> impl IntoView {
-        let member = expect_context::<Option<member::Member>>();
+        let member = expect_context::<member::Member>();
         let on_click = move |_| {
-            let Some(member) = member else {
-                return;
-            };
             member.action.set(action);
         };
         view! {
@@ -62,19 +56,14 @@ fn Preview() -> impl IntoView {
         }
     }
 
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let actions_waitlist = expect_context::<ActionsWaitlist>();
-    let redraw = move |_| {
-        let Some(member) = member else {
-            return;
-        };
-        actions_waitlist.redraw(member.id)
-    };
+    let redraw = move |_| actions_waitlist.redraw(member.id);
     view! {
         <div
           class="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-3xl text-pretty text-zinc-300 rounded-lg bg-gray-700 border-gray-400 hover:border-gray-700 grid justify-content-center justify-items-center gap-5 p-5 mx-32 my-10 border-4 z-10"
         >
-          <h2 class="text-center">{move || member.map(|x| x.name.get())}</h2>
+          <h2 class="text-center">{move || member.name.get()}</h2>
           <AButton value="اضافة ابن".to_string() action=member::Action::Add/>
           <AButton value="حذف الابن".to_string() action=member::Action::Remove/>
           <AButton value="تحديث بيانات".to_string() action=member::Action::Update/>
@@ -93,23 +82,15 @@ fn ActionDiv<F>(submit: F, children: Children) -> impl IntoView
 where
     F: Fn() + 'static + Clone + Copy,
 {
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let actions_waitlist = expect_context::<ActionsWaitlist>();
 
     let ok = move |_| {
-        let Some(member) = member else {
-            return;
-        };
         submit();
         actions_waitlist.redraw(member.id)
     };
 
-    let cancel = move |_| {
-        let Some(member) = member else {
-            return;
-        };
-        actions_waitlist.redraw(member.id)
-    };
+    let cancel = move |_| actions_waitlist.redraw(member.id);
 
     view! {
     <div
@@ -137,7 +118,7 @@ fn Add() -> impl IntoView {
     let is_only = RwSignal::new(true);
     let names = RwSignal::new(String::new());
     let select_ref = create_node_ref::<html::Select>();
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let on_input = move |ev| {
         let value = event_target_value(&ev);
         if value.contains(',') {
@@ -148,9 +129,6 @@ fn Add() -> impl IntoView {
         names.set(value);
     };
     let submit = move || {
-        let Some(member) = member else {
-            return;
-        };
         let value: bool = select_ref.get().unwrap().value().parse().unwrap();
         names.get().split(',').for_each(|name| {
             let new_member = member::Member::create_from_name(name);
@@ -184,12 +162,9 @@ fn Add() -> impl IntoView {
 
 #[component]
 fn Remove() -> impl IntoView {
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let removed = RwSignal::new(Vec::new());
     let get_restored = move || {
-        let Some(member) = member else {
-            return vec![];
-        };
         member
             .sons
             .get()
@@ -198,9 +173,6 @@ fn Remove() -> impl IntoView {
             .collect::<Vec<_>>()
     };
     let get_removed = move || {
-        let Some(member) = member else {
-            return vec![];
-        };
         member
             .sons
             .get()
@@ -216,9 +188,6 @@ fn Remove() -> impl IntoView {
     };
 
     let submit = move || {
-        let Some(member) = member else {
-            return;
-        };
         member
             .sons
             .update(|xs| xs.retain(|x| !removed.get_untracked().contains(&x.id)));
@@ -253,14 +222,11 @@ fn Remove() -> impl IntoView {
 
 #[component]
 fn Update() -> impl IntoView {
-    let member = expect_context::<Option<member::Member>>();
+    let member = expect_context::<member::Member>();
     let name_ref = create_node_ref::<html::Input>();
     let gender_ref = create_node_ref::<html::Select>();
 
     let submit = move || {
-        let Some(member) = member else {
-            return;
-        };
         let name = name_ref.get().unwrap().value().trim().to_string();
         let is_male: bool = gender_ref.get().unwrap().value().parse().unwrap();
         if name.is_empty() {
@@ -273,7 +239,7 @@ fn Update() -> impl IntoView {
     <ActionDiv submit>
       <input
           class="col-span-4 placeholder:text-center placeholder-gray-400 bg-gray-800 border-gray-500 hover:border-gray-800 text-center border-2 mx-5 p-2 text-4xl rounded-lg w-96"
-          placeholder=move || member.map(|x| x.name.get())
+          placeholder=move || member.name.get()
           node_ref=name_ref
       />
       <select

@@ -24,7 +24,7 @@ async fn get_member(id: Uuid) -> Result<RawMember, ServerFnError> {
 
 #[component]
 pub fn MemberNode() -> impl IntoView {
-    let updates = RwSignal::new(None::<Updates>);
+    let updates = RwSignal::new(Updates::default());
     let params = use_params_map();
     let id = move || {
         let id = params.with(|x| x.get("id").cloned()).unwrap();
@@ -40,45 +40,28 @@ pub fn MemberNode() -> impl IntoView {
             .and_then(Result::ok)
             .map(Member::from_raw)
             .unwrap_or_default();
-        updates.set(Some(member::Updates::init(member)));
+        updates.set(member::Updates::init(member));
     });
 
-    move || {
-        view! {
-            <Suspense>
-                <ServerComp updates=updates/>
-            </Suspense>
-        }
+    view! {
+        <ServerComp updates=updates/>
     }
 }
 
 #[component]
-fn ServerComp(updates: RwSignal<Option<Updates>>) -> impl IntoView {
+fn ServerComp(updates: RwSignal<Updates>) -> impl IntoView {
     let save = move |_| {
-        let Some(updates) = updates.get() else {
-            return;
-        };
         spawn_local(async move {
-            updates.commit().await.unwrap();
+            updates.get().commit().await.unwrap();
         });
-        logging::log!("save");
     };
 
     let reset = move |_| {
-        let Some(updates) = updates.get() else {
-            return;
-        };
-        updates.discard();
-        logging::log!("reset");
+        updates.get().discard();
     };
 
     move || {
-        let member = move || {
-            let Some(updates) = updates.get() else {
-                return None;
-            };
-            Some(updates.copy.get())
-        };
+        let member = move || updates.get().copy.get();
         view! {
             <section class="grid justify-items-center overflow-auto">
                 <h1 class="text-center m-5 text-3xl">تعديل الشجرة</h1>
@@ -93,13 +76,10 @@ fn ServerComp(updates: RwSignal<Option<Updates>>) -> impl IntoView {
 }
 
 #[component]
-fn Node(member: Option<Member>) -> impl IntoView {
+fn Node(member: Member) -> impl IntoView {
     provide_context(member);
     let actions_waitlist = expect_context::<member_actions::ActionsWaitlist>();
     let on_click = move |_| {
-        let Some(member) = member else {
-            return;
-        };
         member.action.set(member::Action::default());
         actions_waitlist.take(member.id);
     };
@@ -110,17 +90,17 @@ fn Node(member: Option<Member>) -> impl IntoView {
         on:click=on_click
         class="pt-3 pb-1 mx-5 size-50 rounded-full"
       >
-        {move || member.map(|x| x.name.get())}
+        {move || member.name.get()}
       </button>
       <Show
-          when=move || !member.is_some_and(|x| x.sons.get().is_empty())>
+          when=move || !member.sons.get().is_empty()>
         <div class="flex flex-row overflow-auto border-t-2 rounded-t-lg border-black">
           <For
-              each=move || member.map(|x| x.sons.get()).unwrap_or(vec![])
+              each=move || member.sons.get()
               key=move |x| x.id
               let:son
           >
-              <Node member=Some(son)/>
+              <Node member=son/>
           </For>
         </div>
       </Show>

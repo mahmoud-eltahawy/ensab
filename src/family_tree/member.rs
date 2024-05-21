@@ -21,7 +21,7 @@ pub struct Member {
     pub action: RwSignal<Action>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Updates {
     origin: RwSignal<RawMember>,
     pub copy: RwSignal<Member>,
