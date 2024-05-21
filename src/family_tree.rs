@@ -42,30 +42,21 @@ pub fn MemberNode() -> impl IntoView {
             .unwrap_or_default();
         updates.set(member::Updates::init(member));
     });
-
-    view! {
-        <ServerComp updates=updates/>
-    }
-}
-
-#[component]
-fn ServerComp(updates: RwSignal<Updates>) -> impl IntoView {
     let save = move |_| {
         spawn_local(async move {
-            updates.get().commit().await.unwrap();
+            updates.get_untracked().commit().await.unwrap();
         });
     };
 
     let reset = move |_| {
-        updates.get().discard();
+        updates.get_untracked().discard();
     };
 
     move || {
-        let member = move || updates.get().copy.get();
         view! {
             <section class="grid justify-items-center overflow-auto">
                 <h1 class="text-center m-5 text-3xl">تعديل الشجرة</h1>
-                <Node member=member()/>
+                <Node member={updates.get().copy.get()}/>
                 <div class="grid justify-items-center overflow-auto">
                     <button on:click=save>"save"</button>
                     <button on:click=reset>"reset"</button>
