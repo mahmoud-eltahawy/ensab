@@ -26,7 +26,7 @@ pub fn App() -> impl IntoView {
             <main class="bg-gray-600">
                 <Routes>
                     <Route path="" view=Home/>
-                    <Route path="ftree/:name" view=MemberNode/>
+                    <Route path="exists/:id" view=MemberNode/>
                 </Routes>
             </main>
         </Router>
