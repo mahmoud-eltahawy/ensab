@@ -44,7 +44,7 @@ pub fn MemberNode() -> impl IntoView {
     });
     let save = move |_| {
         spawn_local(async move {
-            updates.get_untracked().commit().await.unwrap();
+            updates.get_untracked().commit().await.unwrap_or_default();
         });
     };
 
